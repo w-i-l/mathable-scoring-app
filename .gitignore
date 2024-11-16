@@ -136,3 +136,5 @@ cython_debug/
 
 # training assests
 /data
+
+/myenv
