@@ -1,8 +1,9 @@
 import os
+from util import format_path
 
 class DataOrganizer():
     def __init__(self, folder_path):
-        self.folder_path = self.__format_path(folder_path)
+        self.folder_path = format_path(folder_path)
         self.files = self.__load_files()
 
     
@@ -26,14 +27,6 @@ class DataOrganizer():
                 os.rename(source_path, destination_path)
             
             os.rmdir(folder)
-
-
-    def __format_path(self, path):
-        if os.name == 'nt':
-            path = path.replace('/', '\\')
-        else:
-            path = path.replace('\\', '/')
-        return path
 
 
     def __load_files(self):
