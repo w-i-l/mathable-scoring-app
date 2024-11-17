@@ -12,6 +12,11 @@ class DataLoader():
         valid_files = [file for file in files if self.__is_valid_file(file)]
         moves = []
 
+        # read the empty board image
+        empty_board_path = "../data/empty_board.jpg"
+        empty_board_move = GameMove(empty_board_path, "empty")
+        moves.append(empty_board_move)
+
         images = [file for file in valid_files if file.endswith('.jpg')]
         positions = [file for file in valid_files if file.endswith('.txt')]
         images.sort()
