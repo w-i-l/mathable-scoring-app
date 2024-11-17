@@ -69,7 +69,7 @@ def convert_index_to_coordinates(index):
 
 # Modified main code:
 if __name__ == "__main__":
-    for game_number in range(1, 2):
+    for game_number in range(1, 5):
         moves_path = f"../data/train/game_{game_number}"
         scores_path = f"../data/train/game_{game_number}/{game_number}_scores.txt"
         turns_path = f"../data/train/game_{game_number}/{game_number}_turns.txt"
@@ -123,7 +123,8 @@ if __name__ == "__main__":
             # Get original dimensions before any resizing
             original_height, original_width = diff.shape[:2]
             
-            x, y, w, h = cv.boundingRect(diff_piece[0])
+            # x, y, w, h = cv.boundingRect(diff_piece[0])
+            x, y = image_processing.find_added_piece_coordinates(diff)
             w = 105
             h = 105
             
@@ -156,14 +157,14 @@ if __name__ == "__main__":
                     predicted += 1
                 else:
                     print(f"Found matching block {convert_index_to_coordinates(matching_block_idx)} with {overlap_percentage:.2f}% overlap -- matched piece: {moves[i].move} -- matched {convert_index_to_coordinates(matching_block_idx) == moves[i].move}")
-                board_2 = cv.resize(board_2, (800, 800))
-                diff = cv.cvtColor(diff, cv.COLOR_GRAY2BGR)
-                diff = image_processing.draw_rect(diff, [x, y, x+w, y+h])
-                diff = cv.resize(diff, (800, 800))
-                cv.imshow("Difference", diff)
-                cv.imshow("Board 2", board_2)
-                cv.waitKey(0)
-                cv.destroyAllWindows()
+                # board_2 = cv.resize(board_2, (800, 800))
+                # diff = cv.cvtColor(diff, cv.COLOR_GRAY2BGR)
+                # diff = image_processing.draw_rect(diff, [x, y, x+w, y+h])
+                # diff = cv.resize(diff, (800, 800))
+                # cv.imshow("Difference", diff)
+                # cv.imshow("Board 2", board_2)
+                # cv.waitKey(0)
+                # cv.destroyAllWindows()
 
         
             

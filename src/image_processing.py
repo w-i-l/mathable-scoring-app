@@ -155,6 +155,24 @@ class ImageProcessing:
         return square_contour
     
 
+    def find_added_piece_coordinates(self, diff_board: np.ndarray) -> tuple:
+        w, h = 105, 105
+        # find the tile that has the biggest mean value
+        max_mean = 0
+        max_mean_x = 0
+        max_mean_y = 0
+        for x in range(0, diff_board.shape[1] - w, w):
+            for y in range(0, diff_board.shape[0] - h, h):
+                tile = diff_board[y:y+h, x:x+w]
+                mean = np.mean(tile)
+                if mean > max_mean:
+                    max_mean = mean
+                    max_mean_x = x
+                    max_mean_y = y
+
+        return max_mean_x, max_mean_y
+    
+
     def find_largest_contour(self, image: np.ndarray) -> tuple:
         if len(image.shape) == 3:
             gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
