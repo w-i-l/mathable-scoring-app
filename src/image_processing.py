@@ -157,14 +157,19 @@ class ImageProcessing:
 
     def find_added_piece_coordinates(self, diff_board: np.ndarray) -> tuple:
         w, h = 105, 105
-        # find the tile that has the biggest mean value
+        # Define the center region size (about 60% of the tile)
+        center_margin = int(w * 0.2)
+        
         max_mean = 0
         max_mean_x = 0
         max_mean_y = 0
+
         for x in range(0, diff_board.shape[1] - w, w):
             for y in range(0, diff_board.shape[0] - h, h):
                 tile = diff_board[y:y+h, x:x+w]
-                mean = np.mean(tile)
+                center = tile[center_margin:-center_margin, center_margin:-center_margin]
+                
+                mean = np.mean(center)
                 if mean > max_mean:
                     max_mean = mean
                     max_mean_x = x
@@ -231,67 +236,23 @@ class ImageProcessing:
 
 
     def find_difference_between_images(self, image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
-        if image1 is None:
-            raise FileNotFoundError(f"Image not found at {image1}")
-        if image2 is None:
-            raise FileNotFoundError(f"Image not found at {image2}")
-        
-
-        # Convert images to HSV
-        # hsv1 = cv.cvtColor(image1, cv.COLOR_BGR2HSV)
-        # hsv2 = cv.cvtColor(image2, cv.COLOR_BGR2HSV)
-
-        # Define the lower and upper bounds for hue and value
-        lower_bound = np.array([146, 179, 149])
-        upper_bound = np.array([255, 255, 255])
-
-        # Create masks based on the bounds
-        mask1 = cv.inRange(image1, lower_bound, upper_bound)
-        mask2 = cv.inRange(image2, lower_bound, upper_bound)
-
-        # Apply the masks to the images
-        filtered_image1 = cv.bitwise_and(image1, image1, mask=mask1)
-        filtered_image2 = cv.bitwise_and(image2, image2, mask=mask2)
-
-        # Use the filtered images for further processing
-        image1 = filtered_image1
-        image2 = filtered_image2
-
-
-        # Convert images to grayscale
+        if image1 is None or image2 is None:
+            raise FileNotFoundError("Images not found")
         gray1 = cv.cvtColor(image1, cv.COLOR_BGR2GRAY)
         gray2 = cv.cvtColor(image2, cv.COLOR_BGR2GRAY)
 
-        # debug_image1 = gray1.copy()
-        # debug_image1= cv.resize(debug_image1, (800, 800))
-        # debug_image2 = gray2.copy()
-        # debug_image2 = cv.resize(debug_image2, (800, 800))
-        # cv.imshow("Image 1", debug_image1)
-        # cv.imshow("Image 2", debug_image2)
-        # cv.waitKey(0)
-        # cv.destroyAllWindows()
-
-
-        # Resize images to the same size
         gray1 = cv.resize(gray1, (gray2.shape[1], gray2.shape[0]))
 
-        # Apply Gaussian blur to reduce noise
-        gausian_kernel = (3, 3)
-        gray1 = cv.GaussianBlur(gray1, gausian_kernel, 0)
-        gray2 = cv.GaussianBlur(gray2, gausian_kernel, 0)
 
-        # Compute the absolute difference between the two images
-        difference = cv.absdiff(gray1, gray2)
-        
-        # Apply a higher threshold to eliminate more noise
-        _, difference = cv.threshold(difference, 60, 255, cv.THRESH_BINARY)
+        blur1 = cv.GaussianBlur(gray1, (9, 9), 0)
+        blur2 = cv.GaussianBlur(gray2, (9, 9), 0)
+        difference = cv.absdiff(blur1, blur2)
 
-        # # Clean up noise
-        kernel = np.ones((3, 3), np.uint8)
+        _, difference = cv.threshold(difference, 40, 255, cv.THRESH_BINARY)
 
-        difference = cv.erode(difference, kernel, iterations=2)
-        difference = cv.dilate(difference, kernel, iterations=1)
-
+        kernel = np.ones((9, 9), np.uint8)
+        difference = cv.morphologyEx(difference, cv.MORPH_OPEN, kernel)
+        difference = cv.morphologyEx(difference, cv.MORPH_CLOSE, kernel)
 
         return difference
     

@@ -74,6 +74,10 @@ if __name__ == "__main__":
         scores_path = f"../data/train/game_{game_number}/{game_number}_scores.txt"
         turns_path = f"../data/train/game_{game_number}/{game_number}_turns.txt"
 
+        # moves_path = f"../data/validation"
+        # scores_path = f"../data/validation/{game_number}_scores.txt"
+        # turns_path = f"../data/validation/{game_number}_turns.txt"
+
         loader = DataLoader(moves_path)
         moves = loader.load_moves()
         game = GameModel(moves, turns_path, scores_path)
@@ -82,7 +86,7 @@ if __name__ == "__main__":
 
 
         # ################
-        # for i in range(1, len(moves)):
+        # for i in tqdm(range(1, len(moves))):
         #     board_contor_1 = image_processing._find_board_contour(moves[i-1].image_path)
         #     board_contor_2 = image_processing._find_board_contour(moves[i].image_path)
 
@@ -90,6 +94,11 @@ if __name__ == "__main__":
         #     board_2 = image_processing.crop_board(moves[i].image_path, board_contor_2)
 
         #     diff = image_processing.find_difference_between_images(board_1, board_2)
+        #     diff_piece = image_processing.find_added_piece_coordinates(diff)
+        #     x, y = diff_piece
+        #     w, h = 105, 105
+        #     diff = cv.cvtColor(diff, cv.COLOR_GRAY2BGR)
+        #     diff = image_processing.draw_rect(diff, [x, y, x+w, y+h])
             
         #     cv.imwrite(format_path(f"../data/diff/board_{i}-board_{i+1}.jpg"), diff)
         # exit(0)
@@ -157,14 +166,14 @@ if __name__ == "__main__":
                     predicted += 1
                 else:
                     print(f"Found matching block {convert_index_to_coordinates(matching_block_idx)} with {overlap_percentage:.2f}% overlap -- matched piece: {moves[i].move} -- matched {convert_index_to_coordinates(matching_block_idx) == moves[i].move}")
-                # board_2 = cv.resize(board_2, (800, 800))
-                # diff = cv.cvtColor(diff, cv.COLOR_GRAY2BGR)
-                # diff = image_processing.draw_rect(diff, [x, y, x+w, y+h])
-                # diff = cv.resize(diff, (800, 800))
-                # cv.imshow("Difference", diff)
-                # cv.imshow("Board 2", board_2)
-                # cv.waitKey(0)
-                # cv.destroyAllWindows()
+                    board_2 = cv.resize(board_2, (800, 800))
+                    diff = cv.cvtColor(diff, cv.COLOR_GRAY2BGR)
+                    diff = image_processing.draw_rect(diff, [x, y, x+w, y+h])
+                    diff = cv.resize(diff, (800, 800))
+                    cv.imshow("Difference", diff)
+                    cv.imshow("Board 2", board_2)
+                    cv.waitKey(0)
+                    cv.destroyAllWindows()
 
         
             
