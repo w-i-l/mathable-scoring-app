@@ -5,46 +5,47 @@ import numpy as np
 
 
 class ImageProcessing:
-    def __init__(self):
-        pass
 
     def cv2_trackbar(self, image_path):
         image_path = format_path(image_path)
         image = cv.imread(image_path)
+        if image is None:
+            raise FileNotFoundError(f"Image not found at {image_path}")
+
         image = cv.resize(image, (500, 500))
         
         def nothing(x):
             pass
 
-        # Create a properly sized window
+        # create a properly sized window
         cv.namedWindow("Color Filter", cv.WINDOW_NORMAL)
         cv.resizeWindow("Color Filter", 800, 600)
 
-        # Create trackbars for RGB
+        # create trackbars for RGB
         cv.createTrackbar("R", "Color Filter", 255, 255, nothing)
         cv.createTrackbar("G", "Color Filter", 255, 255, nothing)
         cv.createTrackbar("B", "Color Filter", 255, 255, nothing)
 
-        # Create trackbars for HSV
+        # create trackbars for HSV
         cv.createTrackbar("Hue", "Color Filter", 179, 179, nothing)
         cv.createTrackbar("Saturation", "Color Filter", 255, 255, nothing)
         cv.createTrackbar("Value", "Color Filter", 255, 255, nothing)
 
-        # Create filter type selector
+        # create filter type selector
         cv.createTrackbar("Filter (0:RGB 1:HSV)", "Color Filter", 0, 1, nothing)
 
         while True:
-            # Get RGB values
+            # get RGB values
             r = cv.getTrackbarPos("R", "Color Filter")
             g = cv.getTrackbarPos("G", "Color Filter")
             b = cv.getTrackbarPos("B", "Color Filter")
 
-            # Get HSV values
+            # get HSV values
             h = cv.getTrackbarPos("Hue", "Color Filter")
             s = cv.getTrackbarPos("Saturation", "Color Filter")
             v = cv.getTrackbarPos("Value", "Color Filter")
 
-            # Get filter type
+            # get filter type
             filter_type = cv.getTrackbarPos("Filter (0:RGB 1:HSV)", "Color Filter")
 
             if filter_type == 0:  # RGB filtering
@@ -59,10 +60,10 @@ class ImageProcessing:
 
             result = cv.bitwise_and(image, image, mask=mask)
             
-            # Stack images horizontally with proper spacing
+            # stack images horizontally with proper spacing
             display = np.hstack((image, result))
             
-            # Show result
+            # show result
             cv.imshow("Color Filter", display)
 
             if cv.waitKey(1) & 0xFF == 27:  # ESC key
@@ -70,32 +71,25 @@ class ImageProcessing:
 
         cv.destroyAllWindows()
 
-    def area_of_contour(self, contour):
-        return cv.contourArea(contour)
-
 
     def crop_board(self, image_path, board_contour) -> np.ndarray:
         image_path = format_path(image_path)
 
-        # Load image
         image = cv.imread(image_path)
 
         if image is None:
             raise FileNotFoundError(f"Image not found at {image_path}")
 
-        # Get bounding box coordinates of the largest contour
+        # compute the bounding box of the contour
         x, y, w, h = cv.boundingRect(board_contour)
 
-        # Crop the image using the bounding box coordinates
         cropped_image = image[y:y+h, x:x+w]
-
         return cropped_image
 
 
     def _find_board_contour(self, image_path):
         image_path = format_path(image_path)
 
-        # Load image
         image = cv.imread(image_path)
 
         if image is None:
@@ -105,36 +99,25 @@ class ImageProcessing:
         lower_bound = np.array([0, 39, 149])
         upper_bound = np.array([255, 255, 255])
 
-        # Create masks based on the bounds
         mask = cv.inRange(image, lower_bound, upper_bound)
 
-        # Apply the masks to the images
-        result = cv.bitwise_and(image, image, mask=mask)
-        image = result
+        image = cv.bitwise_and(image, image, mask=mask)
 
-        # Convert image to grayscale
         gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
 
-        # Apply GaussianBlur
         blur = cv.GaussianBlur(gray, (7, 7), 0)
 
-        # Apply Canny edge detection
         edges = cv.Canny(blur, 60, 80, apertureSize=3)
-        
-        # Create a kernel for dilation
-        kernel = np.ones((5,5), np.uint8)
-        
-        # Dilate the edges to connect nearby contours
+    
+        # remove noise
+        kernel = np.ones((5,5), np.uint8)    
         dilated_edges = cv.dilate(edges, kernel, iterations=2)
         dilated_edges = cv.erode(dilated_edges, kernel, iterations=1)
 
-        # Find contours on the dilated edges
         contours, _ = cv.findContours(dilated_edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
-
-        # Find the largest contour by area
         largest_contour = max(contours, key=cv.contourArea)
         
-        # Get the center of the largest contour
+        # calculate the center of the contour
         M = cv.moments(largest_contour)
         if M["m00"] != 0:
             center_x = int(M["m10"] / M["m00"])
@@ -143,8 +126,9 @@ class ImageProcessing:
             center_x = image.shape[1] // 2
             center_y = image.shape[0] // 2
 
-        # Create a square contour of 1985x1985
-        half_size = 1470 // 2
+        # create a square contour around the center
+        board_size = 1470
+        half_size = board_size // 2
         square_contour = np.array([
             [[center_x - half_size, center_y - half_size]],  # Top-left
             [[center_x + half_size, center_y - half_size]],  # Top-right
@@ -167,6 +151,8 @@ class ImageProcessing:
         for x in range(0, diff_board.shape[1] - w, w):
             for y in range(0, diff_board.shape[0] - h, h):
                 tile = diff_board[y:y+h, x:x+w]
+
+                # extract the center region
                 center = tile[center_margin:-center_margin, center_margin:-center_margin]
                 
                 mean = np.mean(center)
@@ -177,6 +163,7 @@ class ImageProcessing:
 
         return max_mean_x, max_mean_y
     
+
 
     def find_largest_contour(self, image: np.ndarray) -> tuple:
         if len(image.shape) == 3:
@@ -218,17 +205,48 @@ class ImageProcessing:
 
         return largest_contour, rect
     
+    
+    def find_largest_contour(self, image: np.ndarray) -> tuple:
+        if len(image.shape) == 3:
+            gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+        else:
+            gray = image
+
+        # Apply GaussianBlur
+        blur = cv.GaussianBlur(gray, (7, 7), 0)
+
+        # Apply Canny edge detection
+        edges = cv.Canny(blur, 60, 80, apertureSize=3)
+        
+        # Create a kernel for dilation
+        kernel = np.ones((3,3), np.uint8)
+        
+        # Dilate the edges to connect nearby contours
+        dilated_edges = cv.dilate(edges, kernel, iterations=2)
+        dilated_edges = cv.erode(dilated_edges, kernel, iterations=2)
+
+        # Find contours on the dilated edges
+        contours, _ = cv.findContours(dilated_edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+
+        # For visualization
+        # debug_image = cv.cvtColor(image.copy() if len(image.shape) == 3 else cv.cvtColor(image.copy(), cv.COLOR_GRAY2BGR), cv.COLOR_BGR2RGB)
+        # cv.drawContours(debug_image, contours, -1, (0, 255, 0), 3)
+        # plt.imshow(debug_image)
+        # plt.show()
+
+        if not contours:  # If no contours found
+            return None, None
+
+        # Find the largest contour by area
+        largest_contour = max(contours, key=cv.contourArea)
+
+        # Get the bounding rectangle
+        x, y, w, h = cv.boundingRect(largest_contour)
+        rect = np.array([x, y, x+w, y+h])
+
+        return largest_contour, rect
+    
     def draw_rect(self, image: np.ndarray, rect: np.ndarray, color=(0, 255, 0), thickness=2) -> np.ndarray:
-        """
-        Draw rectangle on image
-        Args:
-            image: Input image
-            rect: Rectangle coordinates [x1, y1, x2, y2]
-            color: Color in BGR format
-            thickness: Line thickness
-        Returns:
-            Image with drawn rectangle
-        """
         if rect is not None:
             x1, y1, x2, y2 = rect
             return cv.rectangle(image.copy(), (x1, y1), (x2, y2), color, thickness)
@@ -238,18 +256,22 @@ class ImageProcessing:
     def find_difference_between_images(self, image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
         if image1 is None or image2 is None:
             raise FileNotFoundError("Images not found")
+        
         gray1 = cv.cvtColor(image1, cv.COLOR_BGR2GRAY)
         gray2 = cv.cvtColor(image2, cv.COLOR_BGR2GRAY)
 
+        # ensure both images have the same dimensions
         gray1 = cv.resize(gray1, (gray2.shape[1], gray2.shape[0]))
-
 
         blur1 = cv.GaussianBlur(gray1, (9, 9), 0)
         blur2 = cv.GaussianBlur(gray2, (9, 9), 0)
+
         difference = cv.absdiff(blur1, blur2)
 
+        # filter out noise
         _, difference = cv.threshold(difference, 40, 255, cv.THRESH_BINARY)
 
+        # remove noise
         kernel = np.ones((9, 9), np.uint8)
         difference = cv.morphologyEx(difference, cv.MORPH_OPEN, kernel)
         difference = cv.morphologyEx(difference, cv.MORPH_CLOSE, kernel)
@@ -257,6 +279,14 @@ class ImageProcessing:
         return difference
     
 
+
+    def find_contous_centroid(self, contours):
+        moments = cv.moments(contours)
+        cX = int(moments["m10"] / moments["m00"])
+        cY = int(moments["m01"] / moments["m00"])
+        return cX, cY
+    
+    
     def find_contous_centroid(self, contours):
         moments = cv.moments(contours)
         cX = int(moments["m10"] / moments["m00"])
@@ -265,37 +295,30 @@ class ImageProcessing:
     
 
     def split_board_in_blocks(self, board: np.ndarray) -> tuple:
-        """ Divide the board into 14x14 blocks, distributing remaining pixels evenly
-        
-        Args:
-            board: Input board image
-            
-        Returns:
-            tuple: (Image with grid drawn, list of rectangle coordinates)
-        """
-        # Create a copy of the board for drawing
+        no_of_blocks_per_side = 14
+
         result = board.copy()
         
+        
+        # Get board dimensions
+
         # Get board dimensions
         height, width = board.shape[:2]
+
+        base_block_height = height // no_of_blocks_per_side
+        base_block_width = width // no_of_blocks_per_side
         
-        # Calculate base block size and remaining pixels
-        base_block_height = height // 14
-        base_block_width = width // 14
+        remaining_height = height % no_of_blocks_per_side
+        remaining_width = width % no_of_blocks_per_side
         
-        remaining_height = height % 14
-        remaining_width = width % 14
-        
-        # Calculate how many blocks will get an extra pixel
-        # We'll distribute from the edges inward
+        # dividing by no_of_blocks may result in some extra pixels
+        # we need to distribute these extra pixels from the outer blocks to the inner blocks
         extra_height_blocks = remaining_height // 2  # blocks from top and bottom
         extra_width_blocks = remaining_width // 2    # blocks from left and right
         
-        # Lists to store block dimensions
         block_heights = []
         block_widths = []
         
-        # Calculate heights for each row
         for i in range(14):
             if i < extra_height_blocks or i >= 14 - extra_height_blocks:
                 # Outer blocks get an extra pixel
@@ -303,7 +326,7 @@ class ImageProcessing:
             else:
                 block_heights.append(base_block_height)
                 
-        # Calculate widths for each column
+        
         for j in range(14):
             if j < extra_width_blocks or j >= 14 - extra_width_blocks:
                 # Outer blocks get an extra pixel
@@ -311,7 +334,7 @@ class ImageProcessing:
             else:
                 block_widths.append(base_block_width)
                 
-        # Calculate cumulative positions
+        # calculate the y and x positions of the blocks
         y_positions = [0]
         for h in block_heights:
             y_positions.append(y_positions[-1] + h)
@@ -320,22 +343,28 @@ class ImageProcessing:
         for w in block_widths:
             x_positions.append(x_positions[-1] + w)
         
-        # Generate and draw rectangles
+        # draw the grid
         rectangles = []
         for i in range(14):
             for j in range(14):
-                # Get block coordinates
+                # block coordinates
                 x1 = x_positions[j]
                 y1 = y_positions[i]
                 x2 = x_positions[j + 1]
                 y2 = y_positions[i + 1]
                 
-                # Store rectangle coordinates
+                # store the rectangle coordinates
                 rectangles.append(((x1, y1), (x2, y2)))
                 
-                # Draw rectangle
+                # draw the rectangle
                 cv.rectangle(result, (x1, y1), (x2, y2), (0, 255, 0), 1)
                 
+                
+                # Optional: Add block coordinates for debugging
+                # cv.putText(result, f"{i},{j}", (x1 + 5, y1 + 20),
+                #           cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 1)
+        
+
                 # Optional: Add block coordinates for debugging
                 # cv.putText(result, f"{i},{j}", (x1 + 5, y1 + 20),
                 #           cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 1)
@@ -347,92 +376,5 @@ class ImageProcessing:
 
 if __name__ == "__main__":
     image_processing = ImageProcessing()
-    i = 4
-    board_1 = cv.imread(f"../data/cropped/board_{i}.jpg")
-    board_2 = cv.imread(f"../data/cropped/board_{i+1}.jpg")
-    
-    ################
-    # image_processing.cv2_trackbar(f"../data/cropped/board_{i}.jpg")
-    # exit(0)
-    # contour = image_processing._find_board_contour(f"../data/cropped/board_{i}.jpg")
-    # image = cv.imread(f"../data/cropped/board_{i}.jpg")
-    # image = cv.drawContours(image, [contour], -1, (0, 255, 0), 3)
-    # image = cv.resize(image, (800, 800))
-    # cv.imshow("Image", image)
-    # cv.waitKey(0)
-    # cv.destroyAllWindows()
-    # exit(0)
-    ################
-
-    diff = image_processing.find_difference_between_images(board_1, board_2)
-    diff_piece = image_processing.find_largest_contour(diff)
-
-    contours = cv.findContours(diff, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-
-    debig_diff = diff.copy()
-    debig_diff = cv.cvtColor(debig_diff, cv.COLOR_GRAY2BGR)
-    cv.drawContours(debig_diff, contours[0], -1, (0, 255, 0), 3)
-    debig_diff = cv.resize(debig_diff, (800, 800))
-    cv.imshow("Difference", debig_diff)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-    
-    # Get original dimensions before any resizing
-    original_height, original_width = diff.shape[:2]
-    
-    x, y, w, h = cv.boundingRect(diff_piece[0])
-    w = 105
-    h = 105
-    
-    # Scale coordinates for board_2
-    scale_x = board_2.shape[1] / original_width
-    scale_y = board_2.shape[0] / original_height
-    
-    board_contour = [
-        int(x * scale_x), 
-        int(y * scale_y), 
-        int((x + w) * scale_x), 
-        int((y + h) * scale_y)
-    ]
-    
-    # Get grid blocks
-    board_2, grid_rectangles = image_processing.split_board_in_blocks(board_2)
-    
-    # Find matching block
-    matching_block_idx, overlap_percentage = find_matching_block(board_contour, grid_rectangles)
-    
-    if matching_block_idx != -1:
-        # Draw matching block in different color
-        matched_rect = grid_rectangles[matching_block_idx]
-        cv.rectangle(board_2, matched_rect[0], matched_rect[1], (0, 0, 255), 2)  # Red color for matched block
-        
-        # Draw the contour rectangle
-        board_2 = image_processing.draw_rect(board_2, board_contour, color=(0, 255, 0), thickness=2)  # Green color for contour
-        
-    board_2 = cv.resize(board_2, (800, 800))
-    diff = cv.resize(diff, (800, 800))
-    cv.imshow("Board 2", board_2)
-    cv.imshow("Difference", diff)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-
-    # image_path = "../data/cropped_board.jpg"
-    # board_contour = image_processing._find_board_contour(image_path)
-    # contour_image = cv.drawContours(cv.imread(image_path), [board_contour], -1, (0, 255, 0), 3)
-    # # Get bounding box coordinates of the largest contour
-    # x, y, w, h = cv.boundingRect(board_contour)
-
-    # # Crop the image using the bounding box coordinates
-    # cropped_image = cv.imread(image_path)[y:y+h, x:x+w]
-
-    # # Display the cropped image
-    # plt.figure()
-    # plt.title("Cropped Image")
-    # plt.imshow(cv.cvtColor(cropped_image, cv.COLOR_BGR2RGB))
-    # plt.show()
-
-    # plt.figure()
-    # plt.title("Largest Contour Only")
-    # plt.imshow(cv.cvtColor(contour_image, cv.COLOR_BGR2RGB))
-    # plt.show()
-    # image_processing.cv2_trackbar(image_path)
+    i = 1
+    image_processing.cv2_trackbar(f"../data/cropped/board_{i}.jpg")
