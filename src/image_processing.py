@@ -377,4 +377,4 @@ class ImageProcessing:
 if __name__ == "__main__":
     image_processing = ImageProcessing()
     i = 1
-    image_processing.cv2_trackbar(f"../data/cropped/board_{i}.jpg")
+    image_processing.cv2_trackbar(f"../data/pieces/{i}.png")

@@ -2,7 +2,6 @@ import cv2 as cv
 import numpy as np
 from image_processing import ImageProcessing
 from game_model import GameModel
-from number_reader import NumberReader
 from util import format_path
 from time import sleep
 
@@ -49,8 +48,7 @@ if __name__ == "__main__":
     pieces = generator.generate_template()
     available_pieces = GameModel.available_pieces()
     for available_piece, piece in zip(available_pieces, pieces):
-        image = NumberReader().extract_number(piece) 
-        cv.imshow(f"Piece {available_piece}", image)
+        cv.imshow(f"Piece {available_piece}", piece)
         cv.waitKey(1)
         sleep(0.5)
         cv.destroyAllWindows()
