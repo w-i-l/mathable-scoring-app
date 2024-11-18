@@ -38,6 +38,40 @@ class GameModel():
         self._turns_path = format_path(turns_path)
         self.game_turns = self.__zip_scores_and_turns()
 
+    @staticmethod
+    def available_pieces():
+        return [
+            # 0-9 (10 pieces)
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+            
+            # 10-19 (10 pieces)
+            10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+            
+            # 20-29 (6 pieces)
+            20, 21, 24, 25, 27, 28,
+            
+            # 30-39 (4 pieces)
+            30, 32, 35, 36,
+            
+            # 40-49 (5 pieces)
+            40, 42, 45, 48, 49,
+            
+            # 50-59 (3 pieces)
+            50, 54, 56,
+            
+            # 60-69 (3 pieces)
+            60, 63, 64,
+            
+            # 70-79 (2 pieces)
+            70, 72,
+            
+            # 80-89 (2 pieces)
+            80, 81,
+            
+            # 90-99 (1 piece)
+            90
+        ]
+
 
     def __zip_scores_and_turns(self):
         game_turns = []
