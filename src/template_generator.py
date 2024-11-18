@@ -48,8 +48,8 @@ if __name__ == "__main__":
     pieces = generator.generate_template()
     available_pieces = GameModel.available_pieces()
     for available_piece, piece in zip(available_pieces, pieces):
-        cv.imshow(f"Piece {available_piece}", piece)
-        cv.waitKey(1)
-        sleep(0.5)
-        cv.destroyAllWindows()
+        # cv.imshow(f"Piece {available_piece}", piece)
+        # cv.waitKey(1)
+        # sleep(0.5)
+        # cv.destroyAllWindows()
         cv.imwrite(f"../data/templates/{available_piece}.jpg", piece)

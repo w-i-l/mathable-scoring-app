@@ -140,3 +140,5 @@ cython_debug/
 /myenv
 /venv
 /.venv
+
+/models

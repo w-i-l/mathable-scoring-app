@@ -5,6 +5,7 @@ from util import *
 from tqdm import tqdm
 import cv2 as cv
 from multiprocessing import Pool
+from cnn import CNNModel
 
 class TestingPipeline:
 
@@ -93,6 +94,9 @@ class TestingPipeline:
     def test_game(self, debug=False, title="Processing moves"):
         predicted = 0
 
+        model = CNNModel()
+        model.load("../models/cnn_model")
+
         for i in tqdm(range(1, len(self.game.moves)), desc=title):
             board_contor_1 = self.image_processing._find_board_contour(self.game.moves[i-1].image_path)
             board_contor_2 = self.image_processing._find_board_contour(self.game.moves[i].image_path)
@@ -128,32 +132,55 @@ class TestingPipeline:
             
             if matching_block_idx != -1:
                 expected_move = self.game.moves[i].move
-                actual_move = self.__convert_index_to_coordinates(matching_block_idx)
+                predicted_move = self.__convert_index_to_coordinates(matching_block_idx)
 
-                if actual_move == expected_move:
+                added_piece = board_2[board_contour[1]:board_contour[3], board_contour[0]:board_contour[2]]
+                added_piece = cv.resize(added_piece, (105, 105))
+                predicted_value = model.predict(added_piece)
+                expected_value = self.game.moves[i].value
+
+                if predicted_move == expected_move and predicted_value == expected_value:
                     predicted += 1
-                else:
-                    print(f"Expected: {expected_move} -- Actual: {actual_move} -- Overlap: {overlap_percentage:.2f}%")
+                elif expected_move != predicted_move:
+                    print(f"Expected: {expected_move} -- Actual: {predicted_move} -- Overlap: {overlap_percentage:.2f}%")
+                elif expected_value != predicted_value:
+                    print(f"Expected: {expected_value} -- Predicted: {predicted_value}")
                     
-                    if debug:
-                        # draw the expected block
-                        matched_rect = grid_rectangles[matching_block_idx]
-                        cv.rectangle(board_2, matched_rect[0], matched_rect[1], (0, 0, 255), 2)
-                        
-                        # draw the actual block
-                        board_2 = self.image_processing.draw_rect(board_2, board_contour, color=(0, 255, 0), thickness=2)
-                       
-                        board_2 = cv.resize(board_2, (800, 800))
-                        diff = cv.cvtColor(diff, cv.COLOR_GRAY2BGR)
-                        
-                        # draw the difference
-                        diff = self.image_processing.draw_rect(diff, [x, y, x+w, y+h])
-                        diff = cv.resize(diff, (800, 800))
+                # if debug:
+                #     # draw the expected block
+                #     matched_rect = grid_rectangles[matching_block_idx]
+                #     cv.rectangle(board_2, matched_rect[0], matched_rect[1], (0, 0, 255), 2)
+                    
+                #     # draw the actual block
+                #     board_2 = self.image_processing.draw_rect(board_2, board_contour, color=(0, 255, 0), thickness=2)
 
-                        cv.imshow("Difference", diff)
-                        cv.imshow("Board 2", board_2)
-                        cv.waitKey(0)
-                        cv.destroyAllWindows()
+                #     add_piece = board_2[board_contour[1]:board_contour[3], board_contour[0]:board_contour[2]]
+                #     add_piece = cv.resize(add_piece, (300, 300))
+                #     add_piece = cv.cvtColor(add_piece, cv.COLOR_BGR2HSV)
+                #     mask = cv.inRange(add_piece, (55, 0, 0), (255, 255, 255))
+                #     add_piece = cv.bitwise_and(add_piece, add_piece, mask=mask)
+                #     cv.imwrite(f"../data/transformed_pieces/{i}.png", add_piece)
+
+
+                #     add_piece = cv.GaussianBlur(add_piece, (3, 3), 0)
+                #     add_piece = cv.Canny(add_piece, 20, 255)
+                #     number_contours, _ = cv.findContours(add_piece, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+                #     add_piece = cv.drawContours(add_piece, number_contours, -1, (0, 255, 0), 2)
+
+                #     add_piece = cv.rectangle(add_piece, (0, 0), (add_piece.shape[1], add_piece.shape[0]), (0, 0, 255), 2)
+                #     cv.imshow("Added Piece", add_piece)
+                    
+                #     board_2 = cv.resize(board_2, (800, 800))
+                #     diff = cv.cvtColor(diff, cv.COLOR_GRAY2BGR)
+                    
+                #     # draw the difference
+                #     diff = self.image_processing.draw_rect(diff, [x, y, x+w, y+h])
+                #     diff = cv.resize(diff, (800, 800))
+
+                #     cv.imshow("Difference", diff)
+                #     cv.imshow("Board 2", board_2)
+                #     cv.waitKey(0)
+                #     cv.destroyAllWindows()
 
         print(f"Predicted: {predicted}/{len(self.game.moves)-1} ({predicted/(len(self.game.moves)-1)*100:.2f}%)")
         return predicted / (len(self.game.moves)-1)
@@ -208,6 +235,6 @@ if __name__ == "__main__":
     turns_path = f"../data/train/game_{game_number}/{game_number}_turns.txt"
 
     pipeline = TestingPipeline(moves_path, scores_path, turns_path)
-    # pipeline.test_game(debug=True)
-    pipeline.test_game_parallel()
+    pipeline.test_game(debug=True)
+    # pipeline.test_game_parallel()
 
