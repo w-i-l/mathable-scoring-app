@@ -1,4 +1,3 @@
-from data_loader import DataLoader
 import cv2 as cv
 import numpy as np
 import os
