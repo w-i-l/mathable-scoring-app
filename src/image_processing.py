@@ -357,7 +357,7 @@ class ImageProcessing:
                 rectangles.append(((x1, y1), (x2, y2)))
                 
                 # draw the rectangle
-                cv.rectangle(result, (x1, y1), (x2, y2), (0, 255, 0), 1)
+                # cv.rectangle(result, (x1, y1), (x2, y2), (0, 255, 0), 1)
                 
                 
                 # Optional: Add block coordinates for debugging

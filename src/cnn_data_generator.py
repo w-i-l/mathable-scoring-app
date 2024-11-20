@@ -107,5 +107,5 @@ if __name__ == "__main__":
     #     turns_path = f"../data/train/game_{game_number}/{game_number}_turns.txt"
     #     generator.generate_data(moves_path, scores_path, turns_path)
     
-    generator.plot_distribution(is_validation=True)
-    # generator.move_from_folder("../data/templates")
+    # generator.plot_distribution(is_validation=False)
+    generator.move_from_folder("../data/templates")

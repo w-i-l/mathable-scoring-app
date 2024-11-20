@@ -8,7 +8,7 @@ import cv2 as cv
 from time import sleep
 import os
 from matplotlib import pyplot as plt
-
+from tqdm import tqdm
 import tensorflow as tf
 from tensorflow.keras import layers
 import numpy as np
@@ -44,20 +44,30 @@ class CNNModel:
     def __create_model(self):
         model = tf.keras.Sequential([
             layers.Conv2D(32, (3, 3), activation='relu', input_shape=(105, 105, 3), padding='same'),
+            layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
+            layers.Conv2D(32, (3, 3), activation='relu', padding='same'),   
             layers.BatchNormalization(),
             layers.MaxPooling2D((2, 2)),
+            layers.Dropout(0.2),
             
+            layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
+            layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
             layers.BatchNormalization(),
             layers.MaxPooling2D((2, 2)),
+            layers.Dropout(0.2),
             
+            layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
+            layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
             layers.BatchNormalization(),
             layers.MaxPooling2D((2, 2)),
+            layers.Dropout(0.2),
 
             layers.Conv2D(256, (3, 3), activation='relu', padding='same'),
             layers.BatchNormalization(),
             layers.MaxPooling2D((2, 2)),
+            layers.Dropout(0.2),
 
             layers.Conv2D(512, (3, 3), activation='relu', padding='same'),
             layers.BatchNormalization(),
@@ -79,40 +89,78 @@ class CNNModel:
 
     def augment_image(self, img):
         augmented_images = []
+        img_tensor = tf.convert_to_tensor(img)
         
         # Original image
         augmented_images.append(img)
         
         # Brightness variations
-        for factor in [0.8, 1.2, 0.9, 1.1]:
-            bright = tf.image.adjust_brightness(img, delta=factor-1)
-            augmented_images.append(bright)
-            
-        # Random crop and resize
-        for _ in range(5):
-            crop_size = tf.random.uniform([], 80, 105, dtype=tf.int32)
-            cropped = tf.image.random_crop(img, [crop_size, crop_size, 3])
-            resized = tf.image.resize(cropped, [105, 105])
-            augmented_images.append(resized)
-            
-        # Hue variations
-        for delta in [-0.1, 0.1, -0.2, 0.2]:
-            hue_adjusted = tf.image.adjust_hue(img, delta)
-            augmented_images.append(hue_adjusted)
-            
-            
+        quantity = 3
+        factors = np.linspace(0.7, 1.3, quantity)
+        no_of_cropped_images = quantity + 1
+        saturations = np.linspace(0.7, 1.3, quantity)
+
+        for factor in factors:
+            for saturation in saturations:
+                for _ in range(no_of_cropped_images):
+                    bright = tf.image.adjust_brightness(img_tensor, delta=factor-1)
+                    saturated = tf.image.adjust_saturation(bright, saturation)
+                    crop_size = tf.random.uniform([], 80, 105, dtype=tf.int32)
+                    cropped = tf.image.random_crop(saturated, [crop_size, crop_size, 3])
+                    resized = tf.image.resize(cropped, [105, 105])
+                    augmented_images.append(resized.numpy())
+                
         return augmented_images
 
-    def train(self, data_loader, epochs=50, batch_size=32):
+    def __generate_dataset(self, data_loader, should_load=False):
         train_data = []
         train_labels = []
         
         unique_pieces = sorted(list(data_loader.files.keys()))
         piece_to_class = {piece: idx for idx, piece in enumerate(unique_pieces)}
+
+        if should_load:
+            # load data from augmented_images
+            for piece in unique_pieces:
+                files = os.listdir(f"../data/augmented_images/{piece}")
+                for file in tqdm(files, desc=f"Loading {piece}"):
+                    img = cv.imread(f"../data/augmented_images/{piece}/{file}")
+                    if img is not None:
+                        img = cv.resize(img, (105, 105))
+                        img = img.astype(np.float32) / 255.0
+                        train_data.append(img)
+                        train_labels.append(piece_to_class[piece])
+
+            return train_data, train_labels
         
-        for piece, files in data_loader.files.items():
-            for file in files:
+        
+        for piece, files in tqdm(data_loader.files.items(), desc="Loading data"):
+            if not os.path.exists(f"../data/augmented_images/{piece}"):
+                os.makedirs(f"../data/augmented_images/{piece}")
+            else:
+                # empty the folder
+                for file in os.listdir(f"../data/augmented_images/{piece}"):
+                    os.remove(f"../data/augmented_images/{piece}/{file}")
+
+
+            if len(files) >= 7:
+                for index, file in enumerate(files[:7]):
+                    img = cv.imread(file)
+                    img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+                    if img is not None:
+                        img = cv.resize(img, (105, 105))
+                        img = img.astype(np.float32) / 255.0
+
+                        train_data.append(img)
+                        train_labels.append(piece_to_class[piece])
+                        
+                        img = tf.keras.utils.save_img(f"../data/augmented_images/{piece}/{index}.png", img)
+
+                files = files[:7]
+
+            for file in tqdm(files, desc=f"Loading {piece}"):
                 img = cv.imread(file)
+                img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
                 if img is not None:
                     img = cv.resize(img, (105, 105))
                     img = img.astype(np.float32) / 255.0
@@ -121,6 +169,18 @@ class CNNModel:
                     augmented = self.augment_image(img)
                     train_data.extend(augmented)
                     train_labels.extend([piece_to_class[piece]] * len(augmented))
+
+                    images_number = len(os.listdir(f"../data/augmented_images/{piece}"))
+                    for idx, img in enumerate(augmented):
+                        idx = images_number + idx
+                        img = tf.keras.utils.save_img(f"../data/augmented_images/{piece}/{idx}.png", img)
+
+        return train_data, train_labels
+    
+
+    def train(self, data_loader, epochs=50, batch_size=32):
+        
+        train_data, train_labels = self.__generate_dataset(data_loader, should_load=True)
         
         X_train = np.array(train_data)
         y_train = np.array(train_labels)
@@ -174,11 +234,14 @@ class CNNModel:
 
 if __name__ == "__main__":
     model = CNNModel()
-    # model.load("../models/cnn_model")
-    # data_loader = DataLoader("../data/cnn/train")
-    # model.train(data_loader, epochs=200, batch_size=32)
-    # model.model.save("../models/cnn_model")
-    # print("Model saved")
+
+    data_loader = DataLoader("../data/cnn/train")
+    try:
+        model.train(data_loader, epochs=200, batch_size=32)
+    except KeyboardInterrupt:
+        print("Training interrupted")
+    model.model.save("../models/cnn_model")
+    print("Model saved")
 
     print("Testing model")
     model.load("../models/cnn_model")

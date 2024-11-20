@@ -4,6 +4,7 @@ from image_processing import ImageProcessing
 from game_model import GameModel
 from util import format_path
 from time import sleep
+from tqdm import tqdm
 
 class TemplateGenerator:
     def __init__(self, board_path):
@@ -37,17 +38,17 @@ class TemplateGenerator:
                         # cv.rectangle(board, (x, y), (x+105, y+105), (0, 255, 255), 8)
             
         # Display results
-        board = cv.resize(board, (800, 800))
-        cv.imshow("Grid", board)
-        cv.waitKey(0)
-        cv.destroyAllWindows()
+        # board = cv.resize(board, (800, 800))
+        # cv.imshow("Grid", board)
+        # cv.waitKey(0)
+        # cv.destroyAllWindows()
         return pieces
 
 if __name__ == "__main__":
     generator = TemplateGenerator("../data/all_pieces_board.jpg")
     pieces = generator.generate_template()
     available_pieces = GameModel.available_pieces()
-    for available_piece, piece in zip(available_pieces, pieces):
+    for available_piece, piece in tqdm(zip(available_pieces, pieces)):
         # cv.imshow(f"Piece {available_piece}", piece)
         # cv.waitKey(1)
         # sleep(0.5)
