@@ -5,7 +5,7 @@ from util import *
 from tqdm import tqdm
 import cv2 as cv
 from multiprocessing import Pool
-from cnn import CNNModel
+from cnn.cnn_model import CNNModel
 
 class TestingPipeline:
 

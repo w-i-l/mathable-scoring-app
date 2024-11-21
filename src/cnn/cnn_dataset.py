@@ -8,6 +8,8 @@ from .cnn_data_loader import DataLoader
 
 
 class DataSet:
+    image_size = 40
+
     def __init__(self, data_loader):
         self.data_loader = data_loader
 
@@ -20,19 +22,20 @@ class DataSet:
         augmented_images.append(img)
         
         # Brightness variations
-        quantity = 3
-        factors = np.linspace(0.7, 1.3, quantity)
+        quantity = 7
+        factors = np.linspace(0.6, 1.4, quantity)
         no_of_cropped_images = quantity + 1
-        saturations = np.linspace(0.7, 1.3, quantity)
+        saturations = np.linspace(0.6, 1.4, quantity)
 
         for factor in factors:
             for saturation in saturations:
                 for _ in range(no_of_cropped_images):
                     bright = tf.image.adjust_brightness(img_tensor, delta=factor-1)
                     saturated = tf.image.adjust_saturation(bright, saturation)
-                    crop_size = tf.random.uniform([], 80, 105, dtype=tf.int32)
+                    min_crop_size = int(self.image_size * 0.7)
+                    crop_size = tf.random.uniform([], min_crop_size, self.image_size, dtype=tf.int32)
                     cropped = tf.image.random_crop(saturated, [crop_size, crop_size, 3])
-                    resized = tf.image.resize(cropped, [105, 105])
+                    resized = tf.image.resize(cropped, [self.image_size, self.image_size])
                     augmented_images.append(resized.numpy())
                 
         return augmented_images
@@ -52,7 +55,7 @@ class DataSet:
                 for file in tqdm(files, desc=f"Loading {piece}"):
                     img = cv.imread(f"../data/augmented_images/{piece}/{file}")
                     if img is not None:
-                        img = cv.resize(img, (105, 105))
+                        img = cv.resize(img, (self.image_size, self.image_size))
                         img = img.astype(np.float32) / 255.0
                         train_data.append(img)
                         train_labels.append(piece_to_class[piece])
@@ -76,7 +79,7 @@ class DataSet:
                     img = cv.imread(file)
                     img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
                     if img is not None:
-                        img = cv.resize(img, (105, 105))
+                        img = cv.resize(img, (self.image_size, self.image_size))
                         img = img.astype(np.float32) / 255.0
 
                         train_data.append(img)
@@ -91,7 +94,7 @@ class DataSet:
                 img = cv.imread(file)
                 img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
                 if img is not None:
-                    img = cv.resize(img, (105, 105))
+                    img = cv.resize(img, (self.image_size, self.image_size))
                     img = img.astype(np.float32) / 255.0
                     
                     # Generate augmented images

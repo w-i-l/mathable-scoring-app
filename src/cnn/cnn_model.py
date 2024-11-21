@@ -15,7 +15,7 @@ class CNNModel:
     
     def __create_model(self):
         model = tf.keras.Sequential([
-            layers.Conv2D(32, (3, 3), activation='relu', input_shape=(105, 105, 3), padding='same'),
+            layers.Conv2D(32, (3, 3), activation='relu', input_shape=(DataSet.image_size, DataSet.image_size, 3), padding='same'),
             layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
             layers.Conv2D(32, (3, 3), activation='relu', padding='same'),   
             layers.BatchNormalization(),
@@ -60,9 +60,9 @@ class CNNModel:
         return model
     
 
-    def train(self, dataset, should_load=False, epochs=50, batch_size=32):
+    def train(self, dataset, should_load=False, should_save=False, epochs=50, batch_size=32):
         
-        train_data, train_labels = dataset.generate_dataset(should_load)
+        train_data, train_labels = dataset.generate_dataset(should_load, should_save)
         X_train, y_train, X_val, y_val = dataset.split_dataset(train_data, train_labels)
         
         early_stopping = tf.keras.callbacks.EarlyStopping(
@@ -90,7 +90,7 @@ class CNNModel:
 
 
     def predict(self, img):
-        img = cv.resize(img, (105, 105))
+        img = cv.resize(img, (DataSet.image_size, DataSet.image_size))
         img = img.astype(np.float32) / 255.0
         img = np.expand_dims(img, axis=0)
         predictions = self.model.predict(img, verbose=0)
@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
     try:
         print(model.model.summary())
-        model.train(dataset, should_load=True, epochs=200, batch_size=32)
+        model.train(dataset, should_load=True, should_save=False, epochs=200, batch_size=128)
     except KeyboardInterrupt:
         print("Training interrupted")
     model.model.save("../models/cnn_model")
@@ -141,7 +141,8 @@ if __name__ == "__main__":
             prediction = model.predict(img)
             if prediction == i:
                 acc += 1
-            print(f"Expected: {i} -- Predicted: {prediction}")
+            else:
+                print(f"Expected: {i} -- Predicted: {prediction}")
             total += 1
     print(f"Accuracy: {acc/total:.2f}")
 
