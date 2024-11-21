@@ -60,9 +60,9 @@ class CNNModel:
         return model
     
 
-    def train(self, dataset, epochs=50, batch_size=32):
+    def train(self, dataset, should_load=False, epochs=50, batch_size=32):
         
-        train_data, train_labels = dataset.generate_dataset()
+        train_data, train_labels = dataset.generate_dataset(should_load)
         X_train, y_train, X_val, y_val = dataset.split_dataset(train_data, train_labels)
         
         early_stopping = tf.keras.callbacks.EarlyStopping(
@@ -109,7 +109,8 @@ if __name__ == "__main__":
     dataset = DataSet(data_loader)
 
     try:
-        model.train(dataset, epochs=200, batch_size=32)
+        print(model.model.summary())
+        model.train(dataset, should_load=True, epochs=200, batch_size=32)
     except KeyboardInterrupt:
         print("Training interrupted")
     model.model.save("../models/cnn_model")
@@ -117,7 +118,6 @@ if __name__ == "__main__":
 
     print("Testing model")
     model.load("../models/cnn_model")
-    print(model.model.summary())
     acc = 0
     total = 0 
     for i in GameModel.available_pieces():
@@ -130,7 +130,6 @@ if __name__ == "__main__":
     print(f"Accuracy: {acc/total:.2f}")
 
     print("Validate model")
-    model.load("../models/cnn_model")
     acc = 0
     total = 0 
     data_loader = DataLoader("../data/cnn/validation")

@@ -3,12 +3,13 @@ import numpy as np
 import os
 import tensorflow as tf
 from tqdm import tqdm
+from game_model import GameModel
+from .cnn_data_loader import DataLoader
 
 
 class DataSet:
     def __init__(self, data_loader):
         self.data_loader = data_loader
-        self.__generate_dataset()
 
 
     def __augment_image(self, img):
@@ -108,19 +109,34 @@ class DataSet:
     
 
     def split_dataset(self, train_data, train_labels, split_ratio=0.8):
-        # Shuffle the data
-        indices = np.arange(len(train_data))
-        np.random.shuffle(indices)
-        train_data = train_data[indices]
-        train_labels = train_labels[indices]
+        # Split the data for each class
+        X_train, y_train, X_val, y_val = [], [], [], []
+        unique_classes = np.unique(train_labels)
         
-        # Create validation split
-        split = int(split_ratio * len(train_data))
-        X_val = train_data[split:]
-        y_val = train_labels[split:]
-        X_train = train_data[:split]
-        y_train = train_labels[:split]
+        train_data = np.array(train_data)
+        train_labels = np.array(train_labels)
         
-        return X_train, y_train, X_val, y_val
+        for cls in unique_classes:
+            cls_indices = np.where(train_labels == cls)[0]
+            np.random.shuffle(cls_indices)
+            
+            split = int(split_ratio * len(cls_indices))
+            cls_train_indices = cls_indices[:split]
+            cls_val_indices = cls_indices[split:]
+            
+            X_train.extend(train_data[cls_train_indices])
+            y_train.extend(train_labels[cls_train_indices])
+            X_val.extend(train_data[cls_val_indices])
+            y_val.extend(train_labels[cls_val_indices])
+
+        # plot the distribution
+        train_counts = {piece: 0 for piece in unique_classes}
+        val_counts = {piece: 0 for piece in unique_classes}
+        for piece in y_train:
+            train_counts[piece] += 1
+        for piece in y_val:
+            val_counts[piece] += 1
+
+        return np.array(X_train), np.array(y_train), np.array(X_val), np.array(y_val)
 
 
