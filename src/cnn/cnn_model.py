@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
     try:
         print(model.model.summary())
-        model.train(dataset, should_load=True, should_save=False, epochs=200, batch_size=128)
+        model.train(dataset, should_load=False, should_save=True, epochs=200, batch_size=128)
     except KeyboardInterrupt:
         print("Training interrupted")
     model.model.save("../models/cnn_model")

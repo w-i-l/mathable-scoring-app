@@ -10,11 +10,12 @@ from .cnn_data_loader import DataLoader
 class DataSet:
     image_size = 40
 
-    def __init__(self, data_loader):
+    def __init__(self, data_loader, images_per_class=1000):
         self.data_loader = data_loader
+        self.images_per_class = images_per_class
 
 
-    def __augment_image(self, img):
+    def __augment_image(self, img, brightness_steps, saturation_steps, no_of_cropped_images):
         augmented_images = []
         img_tensor = tf.convert_to_tensor(img)
         
@@ -22,10 +23,8 @@ class DataSet:
         augmented_images.append(img)
         
         # Brightness variations
-        quantity = 7
-        factors = np.linspace(0.6, 1.4, quantity)
-        no_of_cropped_images = quantity + 1
-        saturations = np.linspace(0.6, 1.4, quantity)
+        factors = np.linspace(0.6, 1.4, brightness_steps)
+        saturations = np.linspace(0.6, 1.4, saturation_steps)
 
         for factor in factors:
             for saturation in saturations:
@@ -73,23 +72,7 @@ class DataSet:
                     for file in os.listdir(f"../data/augmented_images/{piece}"):
                         os.remove(f"../data/augmented_images/{piece}/{file}")
 
-
-            if len(files) >= 7:
-                for index, file in enumerate(files[:7]):
-                    img = cv.imread(file)
-                    img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-                    if img is not None:
-                        img = cv.resize(img, (self.image_size, self.image_size))
-                        img = img.astype(np.float32) / 255.0
-
-                        train_data.append(img)
-                        train_labels.append(piece_to_class[piece])
-                        
-                        if save_images:
-                            img = tf.keras.utils.save_img(f"../data/augmented_images/{piece}/{index}.png", img)
-
-                files = files[:7]
-
+            brightness_steps, saturation_steps, no_of_cropped_images = self.get_no_of_attributes_for_class(len(files))
             for file in tqdm(files, desc=f"Loading {piece}"):
                 img = cv.imread(file)
                 img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
@@ -98,7 +81,7 @@ class DataSet:
                     img = img.astype(np.float32) / 255.0
                     
                     # Generate augmented images
-                    augmented = self.__augment_image(img)
+                    augmented = self.__augment_image(img, brightness_steps, saturation_steps, no_of_cropped_images)
                     train_data.extend(augmented)
                     train_labels.extend([piece_to_class[piece]] * len(augmented))
 
@@ -109,6 +92,32 @@ class DataSet:
                             img = tf.keras.utils.save_img(f"../data/augmented_images/{piece}/{idx}.png", img)
 
         return train_data, train_labels
+    
+
+    def get_no_of_attributes_for_class(self, no_of_templates):
+        brightness_steps = 0
+        saturation_steps = 0
+        no_of_cropped_images = 0
+
+        total_images = 0
+        while True:
+            brightness_steps += 1
+            saturation_steps += 1
+            no_of_cropped_images += 1
+
+            total_images = no_of_templates * (1 + brightness_steps * saturation_steps * no_of_cropped_images)
+
+            if total_images >= self.images_per_class:
+                break
+        
+        if total_images >= self.images_per_class * 1.2:
+            no_of_cropped_images -= 1
+        
+        total_images = no_of_templates * (1 + brightness_steps * saturation_steps * no_of_cropped_images)
+        if total_images >= self.images_per_class * 1.2:
+            saturation_steps -= 1
+
+        return brightness_steps, saturation_steps, no_of_cropped_images
     
 
     def split_dataset(self, train_data, train_labels, split_ratio=0.8):
@@ -142,4 +151,13 @@ class DataSet:
 
         return np.array(X_train), np.array(y_train), np.array(X_val), np.array(y_val)
 
+
+if __name__ == "__main__":
+    loader = DataLoader("../data/cnn/train")
+    data_set = DataSet(loader, images_per_class=1000)
+    for i in range(2, 20):
+        brightness_steps, saturation_steps, no_of_cropped_images = data_set.get_no_of_attributes_for_class(i)
+        print(f"Templates: {i} - brightness_steps: {brightness_steps}, saturation_steps: {saturation_steps}, no_of_cropped_images: {no_of_cropped_images}", end=" - ")
+        print(f"Total images: {i * (1 + brightness_steps * saturation_steps * no_of_cropped_images)}")
+        
 
