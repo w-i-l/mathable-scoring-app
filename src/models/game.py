@@ -4,9 +4,13 @@ Player = GameTurn.Player
 
 
 class Game:
+    '''
+    Game class that simulates the Mathable board game.
+    '''
 
     def __init__(self):
         self.board = [[None for _ in range(14)] for _ in range(14)]
+        # Set initial values
         self.board[6][6] = 1
         self.board[6][7] = 2
         self.board[7][6] = 3
@@ -18,11 +22,21 @@ class Game:
 
         self.__player = Player.PLAYER1
         self.current_turn = 1
-        self.__starting_position = 1
+        self.__starting_position = 1 # The starting position of the current player
         self.__score = 0
     
 
-    def play(self, position, value):
+    def play(self, position: str, value: int):
+        '''
+        Plays a move on the board.
+        This method updates the board, increases the score and advances the turn.
+
+        Parameters:
+        -----------
+        position (str): The position to play the move. The position is a string with the row number and the column letter.
+        value (int): The value of the piece to play on the board.
+        '''
+
         position = self.__convert_position_to_coordinates(position)
         self.board[position[0]][position[1]] = value
         self.__score += self.__get_score(position)
@@ -30,17 +44,41 @@ class Game:
 
     
     def change_turn(self):
+        '''
+        Changes the turn of the game.
+        '''
+
         self.scores.append((self.__player, self.__starting_position, self.__score))
         self.__player = Player.PLAYER1 if self.__player == Player.PLAYER2 else Player.PLAYER2
         self.__score = 0
         self.__starting_position = self.current_turn
 
 
-    def __get_score(self, position):
+    def __get_score(self, position: tuple[int, int]) -> int:
+        '''
+        Calculates the score for a given position on the board.
+
+        A score is calculated by first checking the 4 directions (top, right, bottom, left) of the position
+        for a valid operation between current position and the two positions in the direction.
+
+        If a valid operation is found, the score is calculated by adding the value of the current position to the score.
+        This can be done for each direction.
+
+        The score is then multiplied by the bonus of the position, if any.
+
+        Parameters:
+        -----------
+        position (tuple[int, int]): The position on the board to calculate the score for.
+
+        Returns:
+        --------
+        int: The score for the given position.
+        '''
+
         row, col = position
         score = 0
         
-        # Define direction offsets: top, right, bottom, left
+        # define direction offsets: top, right, bottom, left
         directions = [
             ((-2, 0), (-1, 0)),  # top: check 2 positions above
             ((0, 2), (0, 1)),    # right: check 2 positions to right
@@ -49,44 +87,74 @@ class Game:
         ]
         
         for (d2_row, d2_col), (d1_row, d1_col) in directions:
-            # Calculate positions to check
+            # calculate positions to check
             pos1_row, pos1_col = row + d1_row, col + d1_col
             pos2_row, pos2_col = row + d2_row, col + d2_col
             
-            # Check bounds and if positions are occupied
+            # check bounds and if positions are occupied
             if (0 <= pos2_row < 14 and 0 <= pos2_col < 14 and
                 self.board[pos1_row][pos1_col] is not None and
                 self.board[pos2_row][pos2_col] is not None):
                 
-                # Get operation and constraint
+                # get operation and constraint
                 operation = self.__get_operation_for(
                     self.board[pos1_row][pos1_col],
                     self.board[pos2_row][pos2_col],
                     self.board[row][col]
                 )
                 
+                # check if operation is valid
                 if operation is not None:
+                    # check if there is a constraint
                     constraint = self.__get_constraint_for(self.__convert_coordinates_to_position((row, col)))
+                    # if there is no constraint or the constraint is the same as the operation
                     if constraint is None or constraint == operation:
                         score += self.board[row][col]
 
-        score *= self.__get_bonus_for(self.__convert_coordinates_to_position((row, col)))
+        # multiply score by bonus
+        position_str = self.__convert_coordinates_to_position((row, col))
+        score *= self.__get_bonus_for(position_str)
         return score
                     
 
-    def __get_bonus_for(self, position):
+    def __get_bonus_for(self, position: str) -> int:
+        '''
+        Returns the bonus for a given position on the board.
+
+        Returns:
+        --------
+        int: The bonus for the given position. If no bonus is found, 1 is returned.
+        '''
+
         if position in self.bonus_positions:
             return self.bonus_positions[position]
         return 1
 
 
     def __get_constraint_for(self, position):
+        '''
+        Returns the constraint for a given position on the board.
+
+        Returns:
+        --------
+        str|None: The constraint for the given position. If no constraint is found, None is returned.
+        '''
+
         if position in self.constraints_positions:
             return self.constraints_positions[position]
         return None
     
 
-    def __get_operation_for(self, elem1, elem2, result):
+    def __get_operation_for(self, elem1: int, elem2: int, result: int) -> str|None:
+        '''
+        Returns the operation that can be applied to elem1 and elem2 to get the result.
+
+        Returns:
+        --------
+        str|None: The operation that can be applied to elem1 and elem2 to get the result.
+        If no operation is found, None is returned.
+        '''
+
         if elem1 + elem2 == result:
             return "+"
         
@@ -96,11 +164,12 @@ class Game:
         if elem1 * elem2 == result:
             return "x"
         
-        if elem1 == 0 and elem2 == 0:
+        # TODO: check for division by zero
+        if elem1 == 0 and elem2 == 0: # 0 / 0 - impossible
             return None
-        elif elem1 == 0 and result == 0:
+        elif elem1 == 0 and result == 0: # 0 / elem2 = 0
             return "/"
-        elif elem2 == 0 and result == 0:
+        elif elem2 == 0 and result == 0: # 0 / elem1 = 0
             return "/"
         elif elem1 != 0 and elem2 != 0 and (elem1 // elem2 == result or elem2 // elem1 == result):
             return "/"
@@ -108,15 +177,25 @@ class Game:
         return None
 
 
-    def __convert_position_to_coordinates(self, position):
+    def __convert_position_to_coordinates(self, position: str) -> tuple[int, int]:
+        '''
+        Returns the coordinates of a given position on the board as a tuple of integers.
+        '''
         return (int(position[:-1]) - 1, ord(position[-1]) - ord('A'))
     
 
-    def __convert_coordinates_to_position(self, coordinates):
+    def __convert_coordinates_to_position(self, coordinates: tuple[int, int]) -> str:
+        '''
+        Returns the position of a given coordinates on the board as a string.
+        '''
         return f"{coordinates[0]+1}{chr(coordinates[1] + ord('A'))}"
     
 
     def print_board(self):
+        '''
+        Prints the board to the console as a grid.
+        '''
+
         for row in self.board:
             for col in row:
                 if col is None:
@@ -126,7 +205,7 @@ class Game:
             print()
 
 
-    def __get_bonus_positions(self):
+    def __get_bonus_positions(self) -> dict[str, int]:
         return {
             # 2x positions (purple squares)
             "2B": 2,
@@ -162,7 +241,7 @@ class Game:
         }
     
 
-    def __get_constraints_positions(self):
+    def __get_constraints_positions(self) -> dict[str, str]:
         return {
             # top
             "2E": "/",

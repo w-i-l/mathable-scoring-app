@@ -9,11 +9,18 @@ from .cnn_dataset import DataSet
 from .cnn_data_loader import DataLoader
 
 class CNNModel:
+    '''
+    Convolutional Neural Network model for image classification
+    '''
     def __init__(self):
         self.model = self.__create_model()
         
     
-    def __create_model(self):
+    def __create_model(self) -> tf.keras.Model:
+        '''
+        Create a CNN model for image classification
+        '''
+
         model = tf.keras.Sequential([
             layers.Conv2D(32, (3, 3), activation='relu', input_shape=(DataSet.image_size, DataSet.image_size, 3), padding='same'),
             layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
@@ -60,17 +67,39 @@ class CNNModel:
         return model
     
 
-    def train(self, dataset, should_load=False, should_save=False, epochs=50, batch_size=32):
+    def train(
+            self, 
+            dataset: DataSet,
+            should_load=False, 
+            should_save=False,
+            epochs=50, 
+            batch_size=32
+    ) -> tf.keras.callbacks.History:
+        '''
+        Train the model on the given dataset
+
+        Parameters:
+        dataset (DataSet): The dataset to train the model on
+        should_load (bool): Load the dataset from the disk rather than generating it
+        should_save (bool): Save the dataset to the disk after generating it
+        epochs (int): The number of epochs to train the model for
+        batch_size (int): The batch size to use for training
+
+        Returns:
+        history: The training history of the model
+        '''
         
         train_data, train_labels = dataset.generate_dataset(should_load, should_save)
         X_train, y_train, X_val, y_val = dataset.split_dataset(train_data, train_labels)
         
+
         early_stopping = tf.keras.callbacks.EarlyStopping(
             monitor='val_accuracy',
             patience=10,
             restore_best_weights=True
         )
         
+        # Reduce learning rate when a metric has stopped improving
         reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
             monitor='val_loss',
             factor=0.2,
@@ -89,16 +118,39 @@ class CNNModel:
         return history
 
 
-    def predict(self, img):
+    def predict(self, img: np.ndarray) -> str:
+        '''
+        Predict the class of the given image
+
+        Parameters:
+        img (np.ndarray): The image to predict the class of
+
+        Returns:
+        str: The predicted class of the image
+        '''
+
+        # Resize the image to the required size of the model
         img = cv.resize(img, (DataSet.image_size, DataSet.image_size))
+        # Normalize the image
         img = img.astype(np.float32) / 255.0
+        # Add a batch dimension
         img = np.expand_dims(img, axis=0)
+
         predictions = self.model.predict(img, verbose=0)
+        # Get the index of the class with the highest probability
         class_idx = np.argmax(predictions[0])
+
         return GameModel.available_pieces()[class_idx]
         
     
-    def load(self, path):
+    def load(self, path: str):
+        '''
+        Load a model from the given path
+        
+        Parameters:
+        path (str): The path to the model to load
+        '''
+
         self.model = tf.keras.models.load_model(path)
 
 

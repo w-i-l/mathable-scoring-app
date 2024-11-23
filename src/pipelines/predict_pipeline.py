@@ -11,14 +11,21 @@ from models.data_loader import DataLoader
 from cnn.cnn_model import CNNModel
 
 class PredictPipeline(BasePipeline):
+    '''
+    Pipeline for predicting the moves of a game using a CNN model
+    '''
 
-    def __init__(self, moves_path, scores_path, turns_path):
+    def __init__(self, moves_path: str, scores_path: str, turns_path: str):
         loader = DataLoader(moves_path)
         moves = loader.load_moves()
         self.game = GameModel(moves, turns_path, scores_path)
         self.image_processing = ImageProcessing()
     
-    def play_game(self, game_model, model, game_number=1):
+    def play_game(self, game_model: GameModel, model: CNNModel, game_number=1):
+        '''
+        Plays the game using the CNN model to predict the moves and saves the results in the output folder.
+        '''
+
         game = Game()
         moves = game_model.moves
 
@@ -45,7 +52,8 @@ class PredictPipeline(BasePipeline):
             scale_x = board_2.shape[1] / original_width
             scale_y = board_2.shape[0] / original_height
             
-            board_contour = [
+            # compute the added piece contour relative to the board_2
+            added_piece_contour = [
                 int(x * scale_x), 
                 int(y * scale_y), 
                 int((x + w) * scale_x), 
@@ -56,15 +64,17 @@ class PredictPipeline(BasePipeline):
             board_2, grid_rectangles = self.image_processing.split_board_in_blocks(board_2)
             
             # find the matching block
-            matching_block_idx, overlap_percentage = self.find_matching_block(board_contour, grid_rectangles)
+            matching_block_idx, overlap_percentage = self.find_matching_block(added_piece_contour, grid_rectangles)
             
+            # if a matching block is found, predict the move
             if matching_block_idx != -1:
                 predicted_move = self.convert_index_to_coordinates(matching_block_idx)
 
-                added_piece = board_2[board_contour[1]:board_contour[3], board_contour[0]:board_contour[2]]
+                added_piece = board_2[added_piece_contour[1]:added_piece_contour[3], added_piece_contour[0]:added_piece_contour[2]]
                 added_piece = cv.resize(added_piece, (105, 105))
                 predicted_value = model.predict(added_piece)
 
+                # format the index
                 if i < 10:
                     index = f"0{i}"
                 else:
@@ -72,15 +82,19 @@ class PredictPipeline(BasePipeline):
                 with open(format_path(f"../data/output/game_{game_number}/{game_number}_{index}.txt"), "w") as file:
                     file.write(f"{predicted_move} {predicted_value}\n")
 
+                # process the move
                 game.play(predicted_move, predicted_value)
 
+                # check if the turn is over
                 for turn in game_model.game_turns:
                     if int(turn.starting_position) == game.current_turn:
                         game.change_turn()
                         break
 
+        # add the last score
         game.change_turn()
 
+        # save the scores
         scores = game.scores
         with open(format_path(f"../data/output/game_{game_number}/{game_number}_scores.txt"), "w+") as file:
             for score in scores:

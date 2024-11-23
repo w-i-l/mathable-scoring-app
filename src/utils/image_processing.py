@@ -5,8 +5,15 @@ import numpy as np
 
 
 class ImageProcessing:
+    '''
+    An utility class for image processing tasks
+    '''
 
-    def cv2_trackbar(self, image_path):
+    def cv2_trackbar(self, image_path: str):
+        '''
+        A simple OpenCV trackbar example
+        '''
+
         image_path = format_path(image_path)
         image = cv.imread(image_path)
         if image is None:
@@ -72,7 +79,10 @@ class ImageProcessing:
         cv.destroyAllWindows()
 
 
-    def crop_board(self, image_path, board_contour) -> np.ndarray:
+    def crop_board(self, image_path: str, board_contour: np.ndarray) -> np.ndarray:
+        '''
+        Crop the board from the image using the board contour
+        '''
         image_path = format_path(image_path)
 
         image = cv.imread(image_path)
@@ -87,7 +97,11 @@ class ImageProcessing:
         return cropped_image
 
 
-    def _find_board_contour(self, image_path):
+    def _find_board_contour(self, image_path: str) -> np.ndarray:
+        '''
+        Find the contour of the board in the image
+        '''
+
         image_path = format_path(image_path)
 
         image = cv.imread(image_path)
@@ -95,18 +109,19 @@ class ImageProcessing:
         if image is None:
             raise FileNotFoundError(f"Image not found at {image_path}")
         
-        # filter hue above 70
+        # filter the image to have green and red colors
+        # above a certain threshold
         lower_bound = np.array([0, 39, 149])
         upper_bound = np.array([255, 255, 255])
 
         mask = cv.inRange(image, lower_bound, upper_bound)
-
         image = cv.bitwise_and(image, image, mask=mask)
-
+        
+        # preprocess the image
         gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-
         blur = cv.GaussianBlur(gray, (7, 7), 0)
 
+        # detect edges
         edges = cv.Canny(blur, 60, 80, apertureSize=3)
     
         # remove noise
@@ -140,8 +155,14 @@ class ImageProcessing:
     
 
     def find_added_piece_coordinates(self, diff_board: np.ndarray) -> tuple:
+        '''
+        Find the coordinates of the added piece in the difference board
+        by finding the region with the highest mean value
+        '''
+
         w, h = 105, 105
-        # Define the center region size (about 60% of the tile)
+        # define the center region size (about 60% of the tile)
+        # dropping the outer 20% of the tile to avoid noise
         center_margin = int(w * 0.2)
         
         max_mean = 0
@@ -155,6 +176,7 @@ class ImageProcessing:
                 # extract the center region
                 center = tile[center_margin:-center_margin, center_margin:-center_margin]
                 
+                # compute the mean of the center region
                 mean = np.mean(center)
                 if mean > max_mean:
                     max_mean = mean
@@ -172,6 +194,10 @@ class ImageProcessing:
 
 
     def find_difference_between_images(self, image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
+        '''
+        Find the difference between two images by comparing their grayscale values
+        '''
+
         if image1 is None or image2 is None:
             raise FileNotFoundError("Images not found")
         
@@ -181,6 +207,7 @@ class ImageProcessing:
         # ensure both images have the same dimensions
         gray1 = cv.resize(gray1, (gray2.shape[1], gray2.shape[0]))
 
+        # apply Gaussian blur to reduce noise
         blur1 = cv.GaussianBlur(gray1, (9, 9), 0)
         blur2 = cv.GaussianBlur(gray2, (9, 9), 0)
 
@@ -197,17 +224,24 @@ class ImageProcessing:
         return difference
 
 
-    def split_board_in_blocks(self, board: np.ndarray) -> tuple:
+    def split_board_in_blocks(self, board: np.ndarray) -> tuple[np.ndarray, list[tuple[tuple[int, int], tuple[int, int]]]]:
+        '''
+        Split the board into 14x14 blocks
+
+        Returns:
+        --------
+        - The board with the grid drawn
+        - A list of rectangles representing the blocks - [(x1, y1), (x2, y2)]
+        '''
+
         no_of_blocks_per_side = 14
 
         result = board.copy()
-        
-        
-        # Get board dimensions
 
-        # Get board dimensions
+        # get board dimensions
         height, width = board.shape[:2]
 
+        # calculate the dimension for each block
         base_block_height = height // no_of_blocks_per_side
         base_block_width = width // no_of_blocks_per_side
         
@@ -224,7 +258,7 @@ class ImageProcessing:
         
         for i in range(14):
             if i < extra_height_blocks or i >= 14 - extra_height_blocks:
-                # Outer blocks get an extra pixel
+                # outer blocks get an extra pixel
                 block_heights.append(base_block_height + 1)
             else:
                 block_heights.append(base_block_height)
@@ -232,7 +266,7 @@ class ImageProcessing:
         
         for j in range(14):
             if j < extra_width_blocks or j >= 14 - extra_width_blocks:
-                # Outer blocks get an extra pixel
+                # outer blocks get an extra pixel
                 block_widths.append(base_block_width + 1)
             else:
                 block_widths.append(base_block_width)

@@ -1,5 +1,8 @@
 class BasePipeline:
-    
+    '''
+    Base class for all pipelines. Contains common methods for all pipelines.
+    '''
+
     def __calculate_intersection_area(self, rect1, rect2):
         x_left = max(rect1[0], rect2[0])
         y_top = max(rect1[1], rect2[1])

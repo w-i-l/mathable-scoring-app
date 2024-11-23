@@ -5,6 +5,9 @@ from scipy import stats
 import os
 
 class StatisticalPlots:
+    '''
+    A class which provides functionality to plot statistical distributions
+    '''
 
     def plot_distribution(self, is_validation=False):
         pieces = GameModel.available_pieces()
@@ -56,25 +59,22 @@ class StatisticalPlots:
         values = list(counts.values())
         x = np.linspace(min(values), max(values), 100)
         
-        # Calculate statistics
+        # calculate statistics
         mean = np.mean(values)
         median = np.median(values)
         trimmed_mean = stats.trim_mean(values, 0.1)  # 10% trimmed mean
         
-        # Calculate normal distribution
+        # calculate normal distribution
         std = np.std(values)
         pdf = stats.norm.pdf(x, mean, std)
         pdf = pdf * len(values) * (max(values) - min(values)) / 5  # Scale for visibility
         
         plt.figure(figsize=(12, 6))
         
-        # Plot histogram
         plt.hist(values, bins=20, density=False, alpha=0.6, color='gray', label='Histogram')
         
-        # Plot distributions
         plt.plot(x, pdf, 'r-', lw=2, label=f'Normal Distribution (μ={mean:.2f}, σ={std:.2f})')
         
-        # Plot statistical measures
         plt.axvline(x=mean, color='r', linestyle='--', label=f'Mean: {mean:.2f}')
         plt.axvline(x=median, color='g', linestyle='--', label=f'Median: {median:.2f}')
         plt.axvline(x=trimmed_mean, color='b', linestyle='--', label=f'Trimmed Mean (10%): {trimmed_mean:.2f}')

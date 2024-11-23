@@ -2,8 +2,11 @@ from enum import Enum
 from utils.helper_functions import format_path
 
 class GameMove:
-    
-    def __init__(self, image_path, position, value=None):
+    '''
+    A class which represents a move in the game.
+    '''
+
+    def __init__(self, image_path: str, position: str, value=None):
         self.image_path = image_path
         self.move = position
         self.value = value
@@ -14,8 +17,14 @@ class GameMove:
 
 
 class GameTurn:
+    '''
+    A class which represents a turn in the game.
+    '''
 
     class Player(Enum):
+        '''
+        An enum class which represents the players in the game.
+        '''
         PLAYER1 = 1
         PLAYER2 = 2
 
@@ -34,8 +43,11 @@ class GameTurn:
 
 
 class GameModel:
+    '''
+    A class which represents all states of the game.
+    '''
 
-    def __init__(self, moves: list[GameMove], turns_path, scores_path=None):
+    def __init__(self, moves: list[GameMove], turns_path: str, scores_path=None|str):
         self.moves = moves
         self._scores_path = format_path(scores_path)
         self._turns_path = format_path(turns_path)
@@ -43,7 +55,10 @@ class GameModel:
 
 
     @staticmethod
-    def available_pieces():
+    def available_pieces() -> list[int]:
+        '''
+        Returns a list of the available pieces in the game.
+        '''
         return [
             # 0-9 (10 pieces)
             0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
@@ -77,7 +92,11 @@ class GameModel:
         ]
 
 
-    def __zip_scores_and_turns(self):
+    def __zip_scores_and_turns(self) -> list[GameTurn]:
+        '''
+        Zips the scores and turns into a list of GameTurn objects.
+        '''
+
         game_turns = []
         turns = self.__load_turns(self._turns_path)
         if self._scores_path == None:
@@ -97,7 +116,11 @@ class GameModel:
         return game_turns
 
 
-    def __load_scores(self, scores_path):
+    def __load_scores(self, scores_path: str) -> list[str]:
+        '''
+        Loads and returns the scores from the scores file.
+        '''
+
         with open(scores_path, 'r') as file:
             lines = file.readlines()
             scores = []
@@ -108,7 +131,11 @@ class GameModel:
             return scores
 
 
-    def __load_turns(self, turns_path):
+    def __load_turns(self, turns_path: str) -> list[str]:
+        '''
+        Loads and returns the turns from the turns file.
+        '''
+
         with open(turns_path, 'r') as file:
             lines = file.readlines()
             turns = []
