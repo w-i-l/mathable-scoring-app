@@ -164,88 +164,6 @@ class ImageProcessing:
         return max_mean_x, max_mean_y
     
 
-
-    def find_largest_contour(self, image: np.ndarray) -> tuple:
-        if len(image.shape) == 3:
-            gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        else:
-            gray = image
-
-        # Apply GaussianBlur
-        blur = cv.GaussianBlur(gray, (7, 7), 0)
-
-        # Apply Canny edge detection
-        edges = cv.Canny(blur, 60, 80, apertureSize=3)
-        
-        # Create a kernel for dilation
-        kernel = np.ones((3,3), np.uint8)
-        
-        # Dilate the edges to connect nearby contours
-        dilated_edges = cv.dilate(edges, kernel, iterations=2)
-        dilated_edges = cv.erode(dilated_edges, kernel, iterations=2)
-
-        # Find contours on the dilated edges
-        contours, _ = cv.findContours(dilated_edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
-
-        # For visualization
-        # debug_image = cv.cvtColor(image.copy() if len(image.shape) == 3 else cv.cvtColor(image.copy(), cv.COLOR_GRAY2BGR), cv.COLOR_BGR2RGB)
-        # cv.drawContours(debug_image, contours, -1, (0, 255, 0), 3)
-        # plt.imshow(debug_image)
-        # plt.show()
-
-        if not contours:  # If no contours found
-            return None, None
-
-        # Find the largest contour by area
-        largest_contour = max(contours, key=cv.contourArea)
-
-        # Get the bounding rectangle
-        x, y, w, h = cv.boundingRect(largest_contour)
-        rect = np.array([x, y, x+w, y+h])
-
-        return largest_contour, rect
-    
-    
-    def find_largest_contour(self, image: np.ndarray) -> tuple:
-        if len(image.shape) == 3:
-            gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        else:
-            gray = image
-
-        # Apply GaussianBlur
-        blur = cv.GaussianBlur(gray, (7, 7), 0)
-
-        # Apply Canny edge detection
-        edges = cv.Canny(blur, 60, 80, apertureSize=3)
-        
-        # Create a kernel for dilation
-        kernel = np.ones((3,3), np.uint8)
-        
-        # Dilate the edges to connect nearby contours
-        dilated_edges = cv.dilate(edges, kernel, iterations=2)
-        dilated_edges = cv.erode(dilated_edges, kernel, iterations=2)
-
-        # Find contours on the dilated edges
-        contours, _ = cv.findContours(dilated_edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
-
-        # For visualization
-        # debug_image = cv.cvtColor(image.copy() if len(image.shape) == 3 else cv.cvtColor(image.copy(), cv.COLOR_GRAY2BGR), cv.COLOR_BGR2RGB)
-        # cv.drawContours(debug_image, contours, -1, (0, 255, 0), 3)
-        # plt.imshow(debug_image)
-        # plt.show()
-
-        if not contours:  # If no contours found
-            return None, None
-
-        # Find the largest contour by area
-        largest_contour = max(contours, key=cv.contourArea)
-
-        # Get the bounding rectangle
-        x, y, w, h = cv.boundingRect(largest_contour)
-        rect = np.array([x, y, x+w, y+h])
-
-        return largest_contour, rect
-    
     def draw_rect(self, image: np.ndarray, rect: np.ndarray, color=(0, 255, 0), thickness=2) -> np.ndarray:
         if rect is not None:
             x1, y1, x2, y2 = rect
@@ -277,22 +195,7 @@ class ImageProcessing:
         difference = cv.morphologyEx(difference, cv.MORPH_CLOSE, kernel)
 
         return difference
-    
 
-
-    def find_contous_centroid(self, contours):
-        moments = cv.moments(contours)
-        cX = int(moments["m10"] / moments["m00"])
-        cY = int(moments["m01"] / moments["m00"])
-        return cX, cY
-    
-    
-    def find_contous_centroid(self, contours):
-        moments = cv.moments(contours)
-        cX = int(moments["m10"] / moments["m00"])
-        cY = int(moments["m01"] / moments["m00"])
-        return cX, cY
-    
 
     def split_board_in_blocks(self, board: np.ndarray) -> tuple:
         no_of_blocks_per_side = 14
@@ -370,8 +273,6 @@ class ImageProcessing:
                 #           cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 1)
         
         return result, rectangles
-
-
 
 
 if __name__ == "__main__":

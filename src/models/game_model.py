@@ -1,7 +1,8 @@
 from enum import Enum
 from utils.helper_functions import format_path
 
-class GameMove():
+class GameMove:
+    
     def __init__(self, image_path, position, value=None):
         self.image_path = image_path
         self.move = position
@@ -12,7 +13,8 @@ class GameMove():
         return f"GameMove(image_path: {self.image_path}, move: {self.move}, value: {self.value})"
 
 
-class GameTurn():
+class GameTurn:
+
     class Player(Enum):
         PLAYER1 = 1
         PLAYER2 = 2
@@ -31,12 +33,14 @@ class GameTurn():
         return f"GameTurn(player: {self.player}, statring_position: {self.starting_position}, score: {self.score})"
 
 
-class GameModel():
+class GameModel:
+
     def __init__(self, moves: list[GameMove], turns_path, scores_path=None):
         self.moves = moves
         self._scores_path = format_path(scores_path)
         self._turns_path = format_path(turns_path)
         self.game_turns = self.__zip_scores_and_turns()
+
 
     @staticmethod
     def available_pieces():

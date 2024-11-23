@@ -7,9 +7,10 @@ from tqdm import tqdm
 import cv2 as cv
 from multiprocessing import Pool
 from cnn.cnn_model import CNNModel
+from .base_pipeline import BasePipeline
 import os
 
-class TestingPipeline:
+class TestingPipeline(BasePipeline):
 
     def __init__(self, moves_path, scores_path, turns_path):
         loader = DataLoader(moves_path)
@@ -45,11 +46,11 @@ class TestingPipeline:
         ]
         
         _, grid_rectangles = self.image_processing.split_board_in_blocks(board_2)
-        matching_block_idx, overlap_percentage = self.__find_matching_block(board_contour, grid_rectangles)
+        matching_block_idx, overlap_percentage = self.find_matching_block(board_contour, grid_rectangles)
         
         if matching_block_idx != -1:
             expected_move = self.game.moves[i].move
-            actual_move = self.__convert_index_to_coordinates(matching_block_idx)
+            actual_move = self.convert_index_to_coordinates(matching_block_idx)
 
             if actual_move == expected_move:
                 return True, None
@@ -130,11 +131,11 @@ class TestingPipeline:
             board_2, grid_rectangles = self.image_processing.split_board_in_blocks(board_2)
             
             # find the matching block
-            matching_block_idx, overlap_percentage = self.__find_matching_block(board_contour, grid_rectangles)
+            matching_block_idx, overlap_percentage = self.find_matching_block(board_contour, grid_rectangles)
             
             if matching_block_idx != -1:
                 expected_move = self.game.moves[i].move
-                predicted_move = self.__convert_index_to_coordinates(matching_block_idx)
+                predicted_move = self.convert_index_to_coordinates(matching_block_idx)
 
                 added_piece = board_2[board_contour[1]:board_contour[3], board_contour[0]:board_contour[2]]
                 added_piece = cv.resize(added_piece, (105, 105))
@@ -186,113 +187,6 @@ class TestingPipeline:
 
         print(f"Predicted: {predicted}/{len(self.game.moves)-1} ({predicted/(len(self.game.moves)-1)*100:.2f}%)")
         return predicted / (len(self.game.moves)-1)
-    
-
-    def play_game(self, game_model, model, game_number=1):
-        game = Game()
-        moves = game_model.moves
-
-        if not os.path.exists(format_path(f"../data/output/game_{game_number}")):
-            os.makedirs(format_path(f"../data/output/game_{game_number}"))
-
-        for i in tqdm(range(1, len(moves)), desc=f"Playing game {game_number}"):
-            board_contor_1 = self.image_processing._find_board_contour(self.game.moves[i-1].image_path)
-            board_contor_2 = self.image_processing._find_board_contour(self.game.moves[i].image_path)
-
-            board_1 = self.image_processing.crop_board(self.game.moves[i-1].image_path, board_contor_1)
-            board_2 = self.image_processing.crop_board(self.game.moves[i].image_path, board_contor_2)
-
-            diff = self.image_processing.find_difference_between_images(board_1, board_2)
-            
-            # get original dimensions before any resizing
-            original_height, original_width = diff.shape[:2]
-
-            x, y = self.image_processing.find_added_piece_coordinates(diff)
-            w = 105
-            h = 105
-            
-            # scale coordinates for board_2
-            scale_x = board_2.shape[1] / original_width
-            scale_y = board_2.shape[0] / original_height
-            
-            board_contour = [
-                int(x * scale_x), 
-                int(y * scale_y), 
-                int((x + w) * scale_x), 
-                int((y + h) * scale_y)
-            ]
-            
-            # computing the grid rectangles
-            board_2, grid_rectangles = self.image_processing.split_board_in_blocks(board_2)
-            
-            # find the matching block
-            matching_block_idx, overlap_percentage = self.__find_matching_block(board_contour, grid_rectangles)
-            
-            if matching_block_idx != -1:
-                predicted_move = self.__convert_index_to_coordinates(matching_block_idx)
-
-                added_piece = board_2[board_contour[1]:board_contour[3], board_contour[0]:board_contour[2]]
-                added_piece = cv.resize(added_piece, (105, 105))
-                predicted_value = model.predict(added_piece)
-
-                if i < 10:
-                    index = f"0{i}"
-                else:
-                    index = str(i)
-                with open(format_path(f"../data/output/game_{game_number}/{game_number}_{index}.txt"), "w") as file:
-                    file.write(f"{predicted_move} {predicted_value}\n")
-
-                game.play(predicted_move, predicted_value)
-
-                for turn in game_model.game_turns:
-                    if int(turn.starting_position) == game.current_turn:
-                        game.change_turn()
-                        break
-
-        game.change_turn()
-        return game.scores
-                    
-    
-    def __calculate_intersection_area(self, rect1, rect2):
-        x_left = max(rect1[0], rect2[0])
-        y_top = max(rect1[1], rect2[1])
-        x_right = min(rect1[2], rect2[2])
-        y_bottom = min(rect1[3], rect2[3])
-        
-        if x_right < x_left or y_bottom < y_top:
-            return 0
-        
-        return (x_right - x_left) * (y_bottom - y_top)
-
-
-    def __find_matching_block(self, contour_rect, grid_rectangles) -> tuple:
-        max_overlap = 0
-        best_block_index = -1
-        
-        # convert grid rectangles to [x1, y1, x2, y2] format
-        formatted_grid_rects = [[r[0][0], r[0][1], r[1][0], r[1][1]] for r in grid_rectangles]
-        
-        # calculate contour rectangle area
-        contour_area = (contour_rect[2] - contour_rect[0]) * (contour_rect[3] - contour_rect[1])
-        
-        for idx, grid_rect in enumerate(formatted_grid_rects):
-            intersection = self.__calculate_intersection_area(contour_rect, grid_rect)
-            
-            overlap_percentage = (intersection / contour_area) * 100 if contour_area > 0 else 0
-            
-            if overlap_percentage > max_overlap:
-                max_overlap = overlap_percentage
-                best_block_index = idx
-        
-        return best_block_index, max_overlap
-
-
-    def __convert_index_to_coordinates(self, index):
-        divider = 14
-        row = index // divider
-        col = index % divider
-
-        return f"{row+1}{chr(col+65)}"
 
 
 if __name__ == "__main__":
@@ -303,29 +197,5 @@ if __name__ == "__main__":
 
     pipeline = TestingPipeline(moves_path, scores_path, turns_path)
     # pipeline.test_game(debug=True)
-    moves = DataLoader(moves_path).load_moves()
-    game_model = GameModel(moves, turns_path, scores_path)
-
-    model = CNNModel()
-    model.load("../models/cnn_model")
-
-    scores = pipeline.play_game(game_model, model)
-    # with open(format_path(f"../data/output/{game_number}_scores.txt"), "w") as file:
-    #     for score in scores:
-    #         file.write(f"Player{str(score[0])} {str(score[1])} {str(score[2])}\n")
-
-
-    files = os.listdir(format_path("../data/output"))
-    outputs = []
-    for file in files:
-        if file.endswith(".txt"):
-            with open(format_path(f"../data/output/{file}"), "r") as f:
-                outputs.append(tuple(f.read().strip().split()))
-
-    outputs = set(outputs)
-    moves = set([(move.move, str(move.value)) for move in moves[1:]])
-    print()
-    print(f"Diff: {outputs.difference(moves)}")
-
     # pipeline.test_game_parallel()
 

@@ -1,9 +1,10 @@
+from .data_loader import DataLoader
 from .game_model import GameTurn, GameModel
 Player = GameTurn.Player
 
-from .data_loader import DataLoader
 
 class Game:
+
     def __init__(self):
         self.board = [[None for _ in range(14)] for _ in range(14)]
         self.board[6][6] = 1
@@ -72,7 +73,6 @@ class Game:
         score *= self.__get_bonus_for(self.__convert_coordinates_to_position((row, col)))
         return score
                     
-
 
     def __get_bonus_for(self, position):
         if position in self.bonus_positions:

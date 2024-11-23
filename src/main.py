@@ -1,4 +1,5 @@
 from pipelines.testing_pipeline import TestingPipeline
+from pipelines.predict_pipeline import PredictPipeline
 from models.game_model import GameModel
 from models.data_loader import DataLoader
 from cnn.cnn_model import CNNModel
@@ -18,12 +19,8 @@ def predict():
         moves = DataLoader(moves_path).load_moves()
         game_model = GameModel(moves, turns_path, scores_path)
 
-        pipeline = TestingPipeline(moves_path, scores_path, turns_path)
-        scores = pipeline.play_game(game_model, model, game_number)
-
-        with open(format_path(f"../data/output/game_{game_number}/{game_number}_scores.txt"), "w+") as file:
-            for score in scores:
-                file.write(f"Player{str(score[0])} {str(score[1])} {str(score[2])}\n")
+        pipeline = PredictPipeline(moves_path, scores_path, turns_path)
+        pipeline.play_game(game_model, model, game_number)
 
 
 def test():
@@ -55,5 +52,5 @@ if __name__ == "__main__":
     # turn off tensorflow warnings
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-    test()
-    # predict()
+    # test()
+    predict()

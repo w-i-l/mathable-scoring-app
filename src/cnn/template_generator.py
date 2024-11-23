@@ -8,9 +8,11 @@ from tqdm import tqdm
 import os
 
 class TemplateGenerator:
+
     def __init__(self, board_path):
         self.board_path = format_path(board_path)
         self.image_processing = ImageProcessing()
+
 
     def generate_templates_from_board(self):
         # Read and preprocess the board image
@@ -45,6 +47,7 @@ class TemplateGenerator:
         # cv.destroyAllWindows()
         return pieces
     
+
     def generate_templates_from_all_together(self):
         board = cv.imread(self.board_path)
         if board is None:
