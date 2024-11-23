@@ -134,11 +134,18 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# training assests
-/data
 
 /myenv
 /venv
 /.venv
 
 /models
+
+# training assests
+/data
+
+# unignore the following files
+!/data/all_pieces_board.jpg
+!/data/all_pieces_togheter.png
+!/data/empty_board.jpg
+
