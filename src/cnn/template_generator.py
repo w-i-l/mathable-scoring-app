@@ -1,8 +1,8 @@
 import cv2 as cv
 import numpy as np
-from image_processing import ImageProcessing
-from game_model import GameModel
-from util import format_path
+from utils.image_processing import ImageProcessing
+from models.game_model import GameModel
+from utils.helper_functions import format_path
 from time import sleep
 from tqdm import tqdm
 import os

@@ -1,7 +1,7 @@
-from game_model import GameTurn, GameModel
+from .game_model import GameTurn, GameModel
 Player = GameTurn.Player
 
-from data_loader import DataLoader
+from .data_loader import DataLoader
 
 class Game:
     def __init__(self):
@@ -204,7 +204,7 @@ class Game:
             "9C": "-",
             "10B": "/",
         }
-    
+
 
 if __name__ == "__main__":
     game = Game()

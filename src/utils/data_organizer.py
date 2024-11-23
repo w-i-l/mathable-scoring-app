@@ -1,5 +1,5 @@
 import os
-from util import format_path
+from helper_functions import format_path
 
 class DataOrganizer():
     def __init__(self, folder_path):
@@ -66,7 +66,7 @@ class DataOrganizer():
             number_of_games = len(os.listdir(self.folder_path))
         
         return number_of_games
-    
+
 if __name__ == "__main__":
     folder_path = "../data/train"
     data_organizer = DataOrganizer(folder_path)

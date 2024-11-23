@@ -1,8 +1,8 @@
-from game_model import GameModel
-from data_loader import DataLoader
-from image_processing import ImageProcessing
-from game_model import GameModel
-from util import format_path
+from models.game_model import GameModel
+from models.data_loader import DataLoader
+from utils.image_processing import ImageProcessing
+from models.game_model import GameModel
+from utils.helper_functions import format_path
 from tqdm import tqdm
 import cv2 as cv
 from time import sleep
@@ -163,8 +163,7 @@ class DataGenerator:
             value = file.split('.')[0]
             source_path = os.path.join(folder_path, file)
             destination_path = f"../data/cnn/train/{value}/{name}_{file}"
-            os.rename(source_path, destination_path)
-                        
+            os.rename(source_path, destination_path)       
 
 if __name__ == "__main__":
     generator = DataGenerator()

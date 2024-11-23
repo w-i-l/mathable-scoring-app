@@ -1,6 +1,5 @@
 import os
 
-
 def format_path(path):
     if path == None:
         return None

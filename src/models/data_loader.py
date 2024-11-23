@@ -1,6 +1,6 @@
 import os
-from util import format_path
-from game_model import GameMove
+from utils.helper_functions import format_path
+from models.game_model import GameMove
 
 class DataLoader():
     def __init__(self, folder_path):
@@ -41,7 +41,6 @@ class DataLoader():
             return False
 
         return (file.endswith('.jpg') or file.endswith('.txt'))
-    
 
 if __name__ == "__main__":
     loader = DataLoader("../data/train/game_1")

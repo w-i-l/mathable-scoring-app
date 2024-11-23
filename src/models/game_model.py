@@ -1,5 +1,5 @@
 from enum import Enum
-from util import format_path
+from utils.helper_functions import format_path
 
 class GameMove():
     def __init__(self, image_path, position, value=None):
@@ -114,7 +114,7 @@ class GameModel():
 
                 turns.append(position)
             return turns
-        
+
 
 if __name__ == "__main__":
     moves = [GameMove("image1.jpg", "e4"), GameMove("image2.jpg", "e5")]

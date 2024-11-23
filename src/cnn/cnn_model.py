@@ -4,7 +4,7 @@ import os
 import tensorflow as tf
 from tqdm import tqdm
 from tensorflow.keras import layers
-from game_model import GameModel
+from models.game_model import GameModel
 from .cnn_dataset import DataSet
 from .cnn_data_loader import DataLoader
 

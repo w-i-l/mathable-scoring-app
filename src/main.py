@@ -1,8 +1,8 @@
-from testing_pipeline import TestingPipeline
-from game_model import GameModel
-from data_loader import DataLoader
+from pipelines.testing_pipeline import TestingPipeline
+from models.game_model import GameModel
+from models.data_loader import DataLoader
 from cnn.cnn_model import CNNModel
-from util import format_path
+from utils.helper_functions import format_path
 import os
 
 
@@ -55,5 +55,5 @@ if __name__ == "__main__":
     # turn off tensorflow warnings
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-    # test()
-    predict()
+    test()
+    # predict()

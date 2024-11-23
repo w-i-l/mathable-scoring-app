@@ -1,12 +1,13 @@
-from data_loader import DataLoader
-from game_model import GameModel, GameMove
-from game import Game
-from image_processing import ImageProcessing
-from util import *
+from models.data_loader import DataLoader
+from models.game_model import GameModel, GameMove
+from models.game import Game
+from utils.image_processing import ImageProcessing
+from utils.helper_functions import format_path
 from tqdm import tqdm
 import cv2 as cv
 from multiprocessing import Pool
 from cnn.cnn_model import CNNModel
+import os
 
 class TestingPipeline:
 

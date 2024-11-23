@@ -3,7 +3,6 @@ import numpy as np
 import os
 import tensorflow as tf
 from tqdm import tqdm
-from game_model import GameModel
 from .cnn_data_loader import DataLoader
 
 
@@ -160,4 +159,3 @@ if __name__ == "__main__":
         print(f"Templates: {i} - brightness_steps: {brightness_steps}, saturation_steps: {saturation_steps}, no_of_cropped_images: {no_of_cropped_images}", end=" - ")
         print(f"Total images: {i * (1 + brightness_steps * saturation_steps * no_of_cropped_images)}")
         
-

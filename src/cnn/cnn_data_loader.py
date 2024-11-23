@@ -1,6 +1,6 @@
-from util import format_path
+from utils.helper_functions import format_path
 import os
-from game_model import GameModel
+from models.game_model import GameModel
 
 
 class DataLoader:
