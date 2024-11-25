@@ -8,8 +8,11 @@ import os
 
 
 def predict():
+    print("Loading CNN model...")
     model = CNNModel()
     model.load("../models/cnn_model")
+    print("CNN model loaded.")
+    print("Predicting moves...")
 
     for game_number in range(1, 5):
         moves_path = f"../data/train/game_{game_number}"
@@ -51,5 +54,5 @@ if __name__ == "__main__":
     # turn off tensorflow warnings
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-    test()
-    # predict()
+    # test()
+    predict()
