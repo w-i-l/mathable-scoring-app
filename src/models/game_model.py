@@ -47,7 +47,7 @@ class GameModel:
     A class which represents all states of the game.
     '''
 
-    def __init__(self, moves: list[GameMove], turns_path: str, scores_path=None|str):
+    def __init__(self, moves: list[GameMove], turns_path: str, scores_path=None):
         self.moves = moves
         self._scores_path = format_path(scores_path)
         self._turns_path = format_path(turns_path)
@@ -106,7 +106,10 @@ class GameModel:
                 game_turns.append(game_turn)
             return game_turns
 
-        scores = self.__load_scores(self._scores_path)
+        if self._scores_path == None:
+            scores = [None] * len(turns)
+        else:
+            scores = self.__load_scores(self._scores_path)
         
         for score, turn in zip(scores, turns):
             player = GameTurn.Player.PLAYER1 if len(game_turns) % 2 == 0 else GameTurn.Player.PLAYER2

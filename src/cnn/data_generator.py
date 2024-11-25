@@ -52,7 +52,8 @@ class DataGenerator:
         moves = loader.load_moves()
         self.game = GameModel(moves, turns_path, scores_path)
 
-        for i in tqdm(range(1, len(self.game.moves)), desc=f"Game {game_number}"):
+        description = "Validation" if is_validation else f"Game {game_number}"
+        for i in tqdm(range(1, len(self.game.moves)), desc=description):
             # find the board contours
             board_contor_1 = self.image_processing._find_board_contour(self.game.moves[i-1].image_path)
             board_contor_2 = self.image_processing._find_board_contour(self.game.moves[i].image_path)
@@ -114,16 +115,16 @@ class DataGenerator:
 
 if __name__ == "__main__":
     generator = DataGenerator()
-    # moves_path = "../data/validation"
-    # scores_path = "../data/validation/1_scores.txt"
-    # turns_path = "../data/validation/1_turns.txt"
-    # generator.generate_data(moves_path, scores_path, turns_path, is_validation=True)
+    moves_path = "../data/validation"
+    scores_path = "../data/validation/1_scores.txt"
+    turns_path = "../data/validation/1_turns.txt"
+    generator.generate_data(moves_path, scores_path, turns_path, is_validation=True)
 
-    # for game_number in range(1, 5):
-    #     moves_path = f"../data/train/game_{game_number}"
-    #     scores_path = f"../data/train/game_{game_number}/{game_number}_scores.txt"
-    #     turns_path = f"../data/train/game_{game_number}/{game_number}_turns.txt"
-    #     generator.generate_data(moves_path, scores_path, turns_path)
+    for game_number in range(1, 5):
+        moves_path = f"../data/train/game_{game_number}"
+        scores_path = f"../data/train/game_{game_number}/{game_number}_scores.txt"
+        turns_path = f"../data/train/game_{game_number}/{game_number}_turns.txt"
+        generator.generate_data(moves_path, scores_path, turns_path, game_number=game_number)
 
-    # generator.move_from_folder("../data/templates/board", name="template_board")
-    # generator.move_from_folder("../data/templates/togheter", name="template_togheter")
+    generator.move_from_folder("../data/templates/board", name="template_board")
+    generator.move_from_folder("../data/templates/togheter", name="template_togheter")

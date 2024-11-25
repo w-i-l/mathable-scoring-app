@@ -111,23 +111,17 @@ if __name__ == "__main__":
     generator = TemplateGenerator("../data/all_pieces_board.jpg")
     pieces = generator.generate_templates_from_board()
     available_pieces = GameModel.available_pieces()
+    if not os.path.exists("../data/templates/board"):
+        os.makedirs("../data/templates/board")
     for available_piece, piece in tqdm(zip(available_pieces, pieces)):
-        # cv.imshow(f"Piece {available_piece}", piece)
-        # cv.waitKey(1)
-        # sleep(0.5)
-        # cv.destroyAllWindows()
         cv.imwrite(f"../data/templates/board/{available_piece}.jpg", piece)
 
 
     generator = TemplateGenerator("../data/all_pieces_togheter.png")
     pieces = generator.generate_templates_from_all_together()
     available_pieces = GameModel.available_pieces()
+    if not os.path.exists("../data/templates/togheter"):
+        os.makedirs("../data/templates/togheter")
     for available_piece, piece in tqdm(zip(available_pieces, pieces)):
-        piece = cv.cvtColor(piece, cv.COLOR_BGR2RGB)
         piece = cv.resize(piece, (105, 105))
-        # cv.imshow(f"Piece {available_piece}", piece)
-        # cv.waitKey(1)
-        # sleep(0.5)
-        # cv.destroyAllWindows()
-        piece = cv.cvtColor(piece, cv.COLOR_RGB2BGR)
         cv.imwrite(f"../data/templates/togheter/{available_piece}.jpg", piece)

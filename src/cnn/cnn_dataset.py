@@ -3,7 +3,7 @@ import numpy as np
 import os
 import tensorflow as tf
 from tqdm import tqdm
-from .cnn_data_loader import DataLoader
+from cnn.cnn_data_loader import DataLoader
 from utils.helper_functions import format_path
 
 

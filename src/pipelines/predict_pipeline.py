@@ -1,4 +1,4 @@
-from .base_pipeline import BasePipeline
+from pipelines.base_pipeline import BasePipeline
 from models.game import Game
 from utils.helper_functions import format_path
 from utils.image_processing import ImageProcessing
@@ -15,10 +15,10 @@ class PredictPipeline(BasePipeline):
     Pipeline for predicting the moves of a game using a CNN model
     '''
 
-    def __init__(self, moves_path: str, scores_path: str, turns_path: str):
+    def __init__(self, moves_path: str, turns_path: str):
         loader = DataLoader(moves_path)
         moves = loader.load_moves()
-        self.game = GameModel(moves, turns_path, scores_path)
+        self.game = GameModel(moves, turns_path)
         self.image_processing = ImageProcessing()
     
     def play_game(self, game_model: GameModel, model: CNNModel, game_number=1):

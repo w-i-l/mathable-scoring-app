@@ -7,7 +7,7 @@ from tqdm import tqdm
 import cv2 as cv
 from multiprocessing import Pool
 from cnn.cnn_model import CNNModel
-from .base_pipeline import BasePipeline
+from pipelines.base_pipeline import BasePipeline
 import os
 
 class TestingPipeline(BasePipeline):

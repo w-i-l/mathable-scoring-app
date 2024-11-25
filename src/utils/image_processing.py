@@ -1,6 +1,6 @@
 import cv2 as cv
 import matplotlib.pyplot as plt
-from .helper_functions import format_path
+from utils.helper_functions import format_path
 import numpy as np
 
 
@@ -311,5 +311,4 @@ class ImageProcessing:
 
 if __name__ == "__main__":
     image_processing = ImageProcessing()
-    i = 1
-    image_processing.cv2_trackbar(f"../data/pieces/{i}.png")
+    image_processing.cv2_trackbar(f"../data/cnn/train/0/1_50.png")

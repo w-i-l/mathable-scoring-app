@@ -5,8 +5,8 @@ import tensorflow as tf
 from tqdm import tqdm
 from tensorflow.keras import layers
 from models.game_model import GameModel
-from .cnn_dataset import DataSet
-from .cnn_data_loader import DataLoader
+from cnn.cnn_dataset import DataSet
+from cnn.cnn_data_loader import DataLoader
 
 class CNNModel:
     '''
