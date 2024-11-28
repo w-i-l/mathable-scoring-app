@@ -149,4 +149,5 @@ cython_debug/
 !/data/all_pieces_togheter.png
 !/data/empty_board.jpg
 !/models/cnn_model/
+!data/board_info.json
 

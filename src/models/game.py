@@ -1,5 +1,6 @@
-from .data_loader import DataLoader
-from .game_model import GameTurn, GameModel
+from models.data_loader import DataLoader
+import json
+from models.game_model import GameTurn, GameModel
 Player = GameTurn.Player
 
 
@@ -206,87 +207,20 @@ class Game:
 
 
     def __get_bonus_positions(self) -> dict[str, int]:
-        return {
-            # 2x positions (purple squares)
-            "2B": 2,
-            "3C": 2,
-            "4D": 2,
-            "5E": 2,
-            "2M": 2,
-            "3L": 2,
-            "4K": 2,
-            "5J": 2,
-            "10E": 2,
-            "11D": 2,
-            "12C": 2,
-            "13B": 2,
-            "10J": 2,
-            "11K": 2,
-            "12L": 2,
-            "13M": 2,
-
-            # 3x positions (orange squares)
-            "1A": 3,
-            "1G": 3,
-            "1H": 3,
-            "1N": 3,
-            "7A": 3,
-            "8A": 3,
-            "14A": 3,
-            "7N": 3,
-            "8N": 3,
-            "14G": 3,
-            "14H": 3,
-            "14N": 3,
-        }
+        with open("../data/board_info.json") as f:
+            return json.load(f)["bonus_positions"]
     
 
     def __get_constraints_positions(self) -> dict[str, str]:
-        return {
-            # top
-            "2E": "/",
-            "3F": "-",
-            "4G": "+",
-            "4H": "x",
-            "5G": "x",
-            "5H": "+",
-            "3I": "-",
-            "2J": "/",
-
-            # right
-            "5M": "/",
-            "6L": "-",
-            "7K": "+",
-            "7J": "x",
-            "8K": "x",
-            "8J": "+",
-            "9L": "-",
-            "10M": "/",
-
-            # bottom
-            "10G": "+",
-            "10H": "x",
-            "11G": "x",
-            "11H": "+",
-            "12F": "-",
-            "13E": "/",
-            "12I": "-",
-            "13J": "/",
-
-            # left
-            "5B": "/",
-            "6C": "-",
-            "7D": "x",
-            "7E": "+",
-            "8D": "+",
-            "8E": "x",
-            "9C": "-",
-            "10B": "/",
-        }
+        with open("../data/board_info.json") as f:
+            return json.load(f)["constraints_positions"]
 
 
 if __name__ == "__main__":
     game = Game()
+    print(game.bonus_positions)
+    print(game.constraints_positions)
+    exit(0)
     game_number = 1
     # moves = DataLoader(f"../data/train/game_{game_number}").load_moves()
     # turns_path = f"../data/train/game_{game_number}/{game_number}_turns.txt"
