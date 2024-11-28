@@ -2,6 +2,7 @@ from pipelines.testing_pipeline import TestingPipeline
 from pipelines.predict_pipeline import PredictPipeline
 from models.game_model import GameModel
 from models.data_loader import DataLoader
+from utils.data_organizer import DataOrganizer
 from cnn.cnn_model import CNNModel
 from utils.helper_functions import format_path
 import os
@@ -23,6 +24,8 @@ def predict():
 
         pipeline = PredictPipeline(moves_path, turns_path)
         pipeline.play_game(game_model, model, game_number)
+
+    DataOrganizer("../data/output").undo_move_files()
 
 
 def test():

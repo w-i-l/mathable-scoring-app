@@ -1,5 +1,5 @@
 import os
-from helper_functions import format_path
+from utils.helper_functions import format_path
 
 class DataOrganizer():
     '''

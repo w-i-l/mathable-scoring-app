@@ -98,7 +98,9 @@ class PredictPipeline(BasePipeline):
         scores = game.scores
         with open(format_path(f"../data/output/game_{game_number}/{game_number}_scores.txt"), "w+") as file:
             for score in scores:
-                file.write(f"Player{str(score[0])} {str(score[1])} {str(score[2])}\n")
+                file.write(f"Player{str(score[0])} {str(score[1])} {str(score[2])}")
+                if score != scores[-1]:
+                    file.write("\n")
     
 
 if __name__ == "__main__":
