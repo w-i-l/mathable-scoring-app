@@ -12,5 +12,5 @@ def format_path(path):
         path = path.replace('/', '\\')
     else:
         path = path.replace('\\', '/')
-
+     
     return path

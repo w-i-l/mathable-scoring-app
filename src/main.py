@@ -11,7 +11,7 @@ import os
 def predict():
     print("Loading CNN model...")
     model = CNNModel()
-    model.load("../models/cnn_model")
+    model.load(format_path("../models/cnn_model"))
     print("CNN model loaded.")
     print("Predicting moves...")
 

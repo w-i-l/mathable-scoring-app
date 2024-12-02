@@ -7,6 +7,8 @@ from tensorflow.keras import layers
 from models.game_model import GameModel
 from cnn.cnn_dataset import DataSet
 from cnn.cnn_data_loader import DataLoader
+from utils.helper_functions import format_path
+import tf_keras
 
 class CNNModel:
     '''
@@ -150,9 +152,10 @@ class CNNModel:
         Parameters:
         path (str): The path to the model to load
         '''
-
-        self.model = tf.keras.models.load_model(path)
-
+        try:
+            self.model = tf.keras.models.load_model(path)
+        except ValueError:
+            self.model = tf_keras.models.load_model(path)
 
 if __name__ == "__main__":
     model = CNNModel()
