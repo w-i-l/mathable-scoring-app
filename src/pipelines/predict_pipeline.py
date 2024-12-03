@@ -81,7 +81,7 @@ class PredictPipeline(BasePipeline):
                 else:
                     index = str(i)
                 with open(format_path(f"../data/output/game_{game_number}/{game_number}_{index}.txt"), "w") as file:
-                    file.write(f"{predicted_move} {predicted_value}\n")
+                    file.write(f"{predicted_move} {predicted_value}")
 
                 # process the move
                 game.play(predicted_move, predicted_value)

@@ -15,9 +15,11 @@ def predict():
     print("CNN model loaded.")
     print("Predicting moves...")
 
+    DataOrganizer("../data/test").move_files()
+
     for game_number in range(1, 5):
-        moves_path = f"../data/train/game_{game_number}"
-        turns_path = f"../data/train/game_{game_number}/{game_number}_turns.txt"
+        moves_path = f"../data/test/game_{game_number}"
+        turns_path = f"../data/test/game_{game_number}/{game_number}_turns.txt"
 
         moves = DataLoader(moves_path).load_moves()
         game_model = GameModel(moves, turns_path)
@@ -57,5 +59,5 @@ if __name__ == "__main__":
     # turn off tensorflow warnings
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-    test()
-    # predict()
+    # test()
+    predict()
