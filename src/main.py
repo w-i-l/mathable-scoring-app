@@ -57,5 +57,5 @@ if __name__ == "__main__":
     # turn off tensorflow warnings
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-    # test()
-    predict()
+    test()
+    # predict()

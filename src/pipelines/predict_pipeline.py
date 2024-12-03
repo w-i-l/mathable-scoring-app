@@ -25,8 +25,9 @@ class PredictPipeline(BasePipeline):
         '''
         Plays the game using the CNN model to predict the moves and saves the results in the output folder.
         '''
-
-        game = Game()
+        
+        player = game_model.game_turns[0].player
+        game = Game(player=player)
         moves = game_model.moves
 
         if not os.path.exists(format_path(f"../data/output/game_{game_number}")):

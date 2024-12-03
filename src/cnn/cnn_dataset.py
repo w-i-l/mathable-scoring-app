@@ -58,8 +58,8 @@ class DataSet:
         augmented_images.append(img)
         
         # compute the variations
-        brightnesses = np.linspace(0.6, 1.4, brightness_steps)
-        saturations = np.linspace(0.6, 1.4, saturation_steps)
+        brightnesses = np.linspace(0.8, 1.2, brightness_steps)
+        saturations = np.linspace(0.8, 1.2, saturation_steps)
 
         for brightness in brightnesses:
             for saturation in saturations:
@@ -67,7 +67,7 @@ class DataSet:
                     bright = tf.image.adjust_brightness(img_tensor, delta=brightness-1)
                     saturated = tf.image.adjust_saturation(bright, saturation)
 
-                    min_crop_size = int(self.image_size * 0.7)
+                    min_crop_size = int(self.image_size * 0.85)
                     crop_size = tf.random.uniform([], min_crop_size, self.image_size, dtype=tf.int32)
                     cropped = tf.image.random_crop(saturated, [crop_size, crop_size, 3])
 

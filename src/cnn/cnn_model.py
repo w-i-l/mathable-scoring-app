@@ -8,8 +8,6 @@ from models.game_model import GameModel
 from cnn.cnn_dataset import DataSet
 from cnn.cnn_data_loader import DataLoader
 from utils.helper_functions import format_path
-import tf_keras
-
 class CNNModel:
     '''
     Convolutional Neural Network model for image classification
@@ -64,7 +62,7 @@ class CNNModel:
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
             loss='sparse_categorical_crossentropy',
-            metrics=['accuracy']
+            metrics=["accuracy"]
         )
         return model
     
@@ -155,17 +153,37 @@ class CNNModel:
         try:
             self.model = tf.keras.models.load_model(path)
         except ValueError:
+            import tf_keras
             self.model = tf_keras.models.load_model(path)
 
 if __name__ == "__main__":
     model = CNNModel()
 
     data_loader = DataLoader("../data/cnn/train")
-    dataset = DataSet(data_loader)
+    dataset = DataSet(data_loader, images_per_class=200)
 
     try:
         print(model.model.summary())
-        model.train(dataset, should_load=False, should_save=True, epochs=200, batch_size=128)
+        history = model.train(dataset, should_load=False, should_save=True, epochs=200, batch_size=128)
+
+        # plotting the metrics to see if the model is overfitting
+        import matplotlib.pyplot as plt
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('Model Accuracy')
+        plt.ylabel('Accuracy')
+        plt.xlabel('Epoch')
+        plt.legend(['Train', 'Validation'], loc='upper left')
+        plt.show()
+
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('Model Loss')
+        plt.ylabel('Loss')
+        plt.xlabel('Epoch')
+        plt.legend(['Train', 'Validation'], loc='upper left')
+        plt.show()
+
     except KeyboardInterrupt:
         print("Training interrupted")
     model.model.save("../models/cnn_model")

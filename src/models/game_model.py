@@ -100,10 +100,11 @@ class GameModel:
         game_turns = []
         turns = self.__load_turns(self._turns_path)
         if self._scores_path == None:
-            player = GameTurn.Player.PLAYER1 if len(game_turns) % 2 == 0 else GameTurn.Player.PLAYER2
+            player = self.__get_first_player()
             for turn in turns:
                 game_turn = GameTurn(player, turn)
                 game_turns.append(game_turn)
+                player = GameTurn.Player.PLAYER1 if player == GameTurn.Player.PLAYER2 else GameTurn.Player.PLAYER2
             return game_turns
 
         if self._scores_path == None:
@@ -111,10 +112,11 @@ class GameModel:
         else:
             scores = self.__load_scores(self._scores_path)
         
+        player = self.__get_first_player()
         for score, turn in zip(scores, turns):
-            player = GameTurn.Player.PLAYER1 if len(game_turns) % 2 == 0 else GameTurn.Player.PLAYER2
             game_turn = GameTurn(player, turn, score)
             game_turns.append(game_turn)
+            player = GameTurn.Player.PLAYER1 if player == GameTurn.Player.PLAYER2 else GameTurn.Player.PLAYER2
 
         return game_turns
 
@@ -148,6 +150,18 @@ class GameModel:
 
                 turns.append(position)
             return turns
+        
+
+    def __get_first_player(self) -> GameTurn.Player:
+        '''
+        Returns the first player in the game.
+        '''
+
+        with open(self._turns_path, 'r') as file:
+            line = file.readline()
+            player, _ = line.split(' ')
+            return GameTurn.Player.PLAYER1 if player == 'Player1' else GameTurn.Player.PLAYER2
+            
 
 
 if __name__ == "__main__":

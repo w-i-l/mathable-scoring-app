@@ -9,7 +9,7 @@ class Game:
     Game class that simulates the Mathable board game.
     '''
 
-    def __init__(self):
+    def __init__(self, player: Player = Player.PLAYER1):
         self.board = [[None for _ in range(14)] for _ in range(14)]
         # Set initial values
         self.board[6][6] = 1
@@ -21,7 +21,7 @@ class Game:
         self.constraints_positions = self.__get_constraints_positions()
         self.scores = []
 
-        self.__player = Player.PLAYER1
+        self.__player = player
         self.current_turn = 1
         self.__starting_position = 1 # The starting position of the current player
         self.__score = 0
